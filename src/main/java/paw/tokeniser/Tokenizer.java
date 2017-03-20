@@ -115,6 +115,7 @@ public abstract class Tokenizer {
 
     /**
      * To string method to print characteristics of the tokenizer
+     *
      * @return string describing the tokenizer
      */
     @Override
@@ -127,5 +128,24 @@ public abstract class Tokenizer {
             }
         }
         return s;
+    }
+
+
+    private boolean keepDelimiter = false;
+
+    /**
+     * Return if the delimiter should be kept as well
+     * @return
+     */
+    public boolean isKeepingDelimiterActivate() {
+        return keepDelimiter;
+    }
+
+    /**
+     * set keepDelimiter
+     * @param keepDelimiter
+     */
+    public void setKeepDelimiter(boolean keepDelimiter) {
+        this.keepDelimiter = keepDelimiter;
     }
 }

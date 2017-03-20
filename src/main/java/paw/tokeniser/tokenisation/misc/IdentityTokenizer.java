@@ -1,5 +1,5 @@
 
-package paw.tokeniser.tokenisation;
+package paw.tokeniser.tokenisation.misc;
 
 import paw.tokeniser.Tokenizer;
 
@@ -35,4 +35,8 @@ public class IdentityTokenizer extends Tokenizer {
         return new String[]{applyAllTokenPreprocessorTo(string)};
     }
 
+    @Override
+    public String toString() {
+        return ID + "\n" + super.toString();
+    }
 }

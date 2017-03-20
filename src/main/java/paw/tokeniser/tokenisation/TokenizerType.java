@@ -1,5 +1,10 @@
 package paw.tokeniser.tokenisation;
 
+import paw.tokeniser.tokenisation.misc.IdentityTokenizer;
+import paw.tokeniser.tokenisation.misc.SimpleTokenizer;
+import paw.tokeniser.tokenisation.misc.UTFTokeniser;
+import paw.tokeniser.tokenisation.nl.EnglishTokenizer;
+
 public class TokenizerType {
 
     /**
