@@ -13,6 +13,10 @@ import java.util.List;
 import static com.github.javaparser.ParseStart.COMPILATION_UNIT;
 import static com.github.javaparser.Providers.provider;
 
+/**
+ * A Java tokenizer
+ * relying on javaParser library
+ */
 public class JavaTokenizer extends Tokenizer {
     public final static String ID = "JAVA TOKENIZER";
 

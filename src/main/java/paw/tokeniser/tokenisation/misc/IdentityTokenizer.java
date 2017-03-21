@@ -28,14 +28,23 @@ public class IdentityTokenizer extends Tokenizer {
         }
         String s = sb.toString();
 
-
         s = applyAllTokenPreprocessorTo(s);
 
-        return new String[]{s};
+        if (s.length() != 0) {
+            return new String[]{s};
+        } else return new String[0];
     }
 
+    /**
+     * As it is an identity tokenizer, i.e., without real tokenization the tokenize String method can ba overwritten
+     * @param string to tokenize
+     * @return the same string but with all preprocessor applied.
+     */
     @Override
     public String[] tokenize(String string) {
+        if (string.length() == 0) {
+            return new String[0];
+        }
         return new String[]{applyAllTokenPreprocessorTo(string)};
     }
 

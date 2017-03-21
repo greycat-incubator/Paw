@@ -7,6 +7,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * An UTF-8 tokenizer
+ * based on Terrier UTF tokenizer
+ */
 public class UTFTokeniser extends Tokenizer {
 
     public final static String ID = "UTF TOKENIZER";
@@ -26,12 +30,13 @@ public class UTFTokeniser extends Tokenizer {
                     )
 
             {
+                if (!Character.isSpaceChar((char) ch) && isKeepingDelimiterActivate())
+                    tokens.add(applyAllTokenPreprocessorTo(String.valueOf((char) ch)));
                 ch = reader.read();
             }
             StringBuilder sw = new StringBuilder(maxWordLength);
-            while (ch != -1 && (Character.isLetterOrDigit((char)ch) || Character.getType((char)ch) == Character.NON_SPACING_MARK || Character.getType((char)ch) == Character.COMBINING_SPACING_MARK))
-            {
-                sw.append((char)ch);
+            while (ch != -1 && (Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)) {
+                sw.append((char) ch);
                 ch = reader.read();
             }
             if (sw.length() < maxWordLength || !DROP_LONG_TOKENS) {
@@ -45,16 +50,13 @@ public class UTFTokeniser extends Tokenizer {
 
     @SuppressWarnings("Duplicates")
     static String check(String s) {
-        //if the s is null
-        //or if it is longer than a specified length
         s = s.trim();
         final int length = s.length();
         int counter = 0;
         int counterdigit = 0;
         int ch = -1;
-        int chNew = -1;
-        for(int i=0;i<length;i++)
-        {
+        int chNew;
+        for (int i = 0; i < length; i++) {
             chNew = s.charAt(i);
             if (Character.isDigit(chNew))
                 counterdigit++;
@@ -63,8 +65,6 @@ public class UTFTokeniser extends Tokenizer {
             else
                 counter = 1;
             ch = chNew;
-			/* if it contains more than 4 consequtive same letters,
-			   or more than 4 digits, then discard the term. */
             if (counter > maxNumOfSameConseqLetterPerTerm
                     || counterdigit > maxNumberOfDigitPerTerm)
                 return "";

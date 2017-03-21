@@ -30,6 +30,8 @@ public class SimpleTokenizer extends Tokenizer {
                 sw = new StringBuilder();
             }
         }
+        if (sw.length() != 0)
+            tokens.add(applyAllTokenPreprocessorTo(sw.toString()));
         return tokens.toArray(new String[tokens.size()]);
     }
 

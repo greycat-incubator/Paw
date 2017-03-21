@@ -7,6 +7,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * An english Tokenizer
+ * based on Terrier English tokenizer
+ */
 public class EnglishTokenizer extends Tokenizer {
     public final static String ID = "ENGLISH TOKENIZER";
 
@@ -23,7 +27,6 @@ public class EnglishTokenizer extends Tokenizer {
 
             while (ch != -1 && (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z')
                     && (ch < '0' || ch > '9')
-                         /* removed by Craig: && ch != '<' && ch != '&' */
                     ) {
                 if (!Character.isSpaceChar((char) ch) && isKeepingDelimiterActivate())
                     tokens.add(String.valueOf((char) ch));
@@ -62,7 +65,7 @@ public class EnglishTokenizer extends Tokenizer {
         int counter = 0;
         int counterdigit = 0;
         int ch = -1;
-        int chNew = -1;
+        int chNew;
         for (int i = 0; i < length; i++) {
             chNew = s.charAt(i);
             if (chNew >= 48 && chNew <= 57)

@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
+/**
+ * A C tokenizer
+ * relying on antlr C grammar
+ */
 public class CTokenizer extends Tokenizer {
 
     public final static String ID = "C TOKENIZER";

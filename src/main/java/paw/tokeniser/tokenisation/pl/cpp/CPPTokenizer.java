@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.List;
 
+/**
+ * A CPP tokenizer
+ * relying on antlr CPP14 grammar
+ */
 public class CPPTokenizer extends Tokenizer {
 
     public final static String ID = "CPP TOKENIZER";
