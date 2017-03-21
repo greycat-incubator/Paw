@@ -7,6 +7,12 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Simple Tokenizer
+ *
+ * Tokenizer that just split according to space
+ * and apply the preprocessor on each tokens
+ */
 public class SimpleTokenizer extends Tokenizer {
 
     public final static String ID = "SIMPLE TOKENIZER";
@@ -14,7 +20,7 @@ public class SimpleTokenizer extends Tokenizer {
     @Override
     public String[] tokenize(Reader reader) throws IOException {
         final List<String> tokens = new ArrayList<>();
-        int ch = 0;
+        int ch;
         StringBuilder sw = new StringBuilder();
         while ((ch = reader.read()) != -1) {
             if (!Character.isSpaceChar((char) ch)) {
@@ -25,5 +31,10 @@ public class SimpleTokenizer extends Tokenizer {
             }
         }
         return tokens.toArray(new String[tokens.size()]);
+    }
+
+    @Override
+    public String toString() {
+        return ID + "\n" + super.toString();
     }
 }

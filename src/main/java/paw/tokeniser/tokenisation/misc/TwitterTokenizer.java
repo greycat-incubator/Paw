@@ -7,29 +7,27 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UTFTokeniser extends Tokenizer {
+public class TwitterTokenizer extends Tokenizer {
 
-    public final static String ID = "UTF TOKENIZER";
+    public final static String ID = "TWITTER TOKENIZER";
     private final static int maxNumberOfDigitPerTerm = 4;
     private final static int maxNumOfSameConseqLetterPerTerm = 3;
     private final static int maxWordLength = 30;
     private final static boolean DROP_LONG_TOKENS = true;
-
-
     @Override
     public String[] tokenize(Reader reader) throws IOException {
         List<String> tokens = new ArrayList<>();
         int ch = reader.read();
         while (ch != -1) {
 
-            while (ch != -1 && !(Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)
+            while (ch != -1 &&  !(ch=='/') && !(ch=='@') &&!(Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)
                     )
 
             {
                 ch = reader.read();
             }
             StringBuilder sw = new StringBuilder(maxWordLength);
-            while (ch != -1 && (Character.isLetterOrDigit((char)ch) || Character.getType((char)ch) == Character.NON_SPACING_MARK || Character.getType((char)ch) == Character.COMBINING_SPACING_MARK))
+            while (ch != -1 && (Character.isLetterOrDigit((char)ch) || Character.getType((char)ch) == Character.NON_SPACING_MARK || Character.getType((char)ch) == Character.COMBINING_SPACING_MARK || ch=='/' || ch=='@'))
             {
                 sw.append((char)ch);
                 ch = reader.read();

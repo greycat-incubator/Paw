@@ -21,15 +21,14 @@ public class EnglishTokenizer extends Tokenizer {
         int ch = reader.read();
         while (ch != -1) {
 
-            if (isKeepingDelimiterActivate())
-                while (ch != -1 && (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z')
-                        && (ch < '0' || ch > '9')
+            while (ch != -1 && (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z')
+                    && (ch < '0' || ch > '9')
                          /* removed by Craig: && ch != '<' && ch != '&' */
-                        ) {
-                    if (!Character.isSpaceChar((char) ch))
-                        tokens.add(String.valueOf((char) ch));
-                    ch = reader.read();
-                }
+                    ) {
+                if (!Character.isSpaceChar((char) ch) && isKeepingDelimiterActivate())
+                    tokens.add(String.valueOf((char) ch));
+                ch = reader.read();
+            }
 
             StringBuilder sw = new StringBuilder(maxWordLength);
             while (ch != -1 && (

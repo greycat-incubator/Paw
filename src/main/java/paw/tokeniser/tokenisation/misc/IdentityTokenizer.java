@@ -1,4 +1,3 @@
-
 package paw.tokeniser.tokenisation.misc;
 
 import paw.tokeniser.Tokenizer;
@@ -6,6 +5,11 @@ import paw.tokeniser.Tokenizer;
 import java.io.IOException;
 import java.io.Reader;
 
+/**
+ * Identity Tokenizer
+ *
+ * Tokenizer that just return the content of the reader without tokenizing it just apply all register preprocessor
+ */
 public class IdentityTokenizer extends Tokenizer {
 
     public final static String ID = "IDENTITY TOKENIZER";
@@ -14,7 +18,7 @@ public class IdentityTokenizer extends Tokenizer {
     public String[] tokenize(Reader reader) throws IOException {
 
         final StringBuilder sb = new StringBuilder();
-        int ch = 0;
+        int ch;
         try {
             while ((ch = reader.read()) != -1) {
                 sb.append((char) ch);
