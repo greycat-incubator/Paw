@@ -8,6 +8,7 @@ import paw.tokeniser.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.javaparser.ParseStart.COMPILATION_UNIT;
@@ -16,6 +17,8 @@ import static com.github.javaparser.Providers.provider;
 /**
  * A Java tokenizer
  * relying on javaParser library
+ *
+ * Not working on anything else than java file!
  */
 public class JavaTokenizer extends Tokenizer {
     public final static String ID = "JAVA TOKENIZER";
@@ -27,12 +30,18 @@ public class JavaTokenizer extends Tokenizer {
         ParseResult<CompilationUnit> result = jp.parse(COMPILATION_UNIT, provider(reader));
         if (result.isSuccessful()) {
             List<JavaToken> l = result.getTokens().get();
-            String[] tokens = new String[l.size()];
+            List<String> tokens = new ArrayList<>(l.size());
             for (int i = 0; i < l.size(); i++) {
                 JavaToken jt = l.get(i);
-                tokens[i] = applyAllTokenPreprocessorTo(jt.getText());
+
+                String s = applyAllTokenPreprocessorTo(jt.getText());
+                if(!s.contains("\n"))
+                    s =  s.trim();
+                if(!s.isEmpty()){
+                    tokens.add(s);
+                }
             }
-            return tokens;
+            return tokens.toArray(new String[tokens.size()]);
         }
         return new String[0];
     }

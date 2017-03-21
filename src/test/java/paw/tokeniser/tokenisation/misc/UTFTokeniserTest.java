@@ -52,4 +52,11 @@ class UTFTokeniserTest {
         Assertions.assertEquals(3,result.length);
         Assertions.assertEquals("me",result[2]);
     }
+
+    @Test
+    public void utfTest(){
+        String[] result = tokenizer.tokenize("mais où est-ce-que ça se trouve?");
+        Assertions.assertEquals(8,result.length);
+        Assertions.assertEquals("où",result[1]);
+    }
 }

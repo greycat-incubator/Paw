@@ -13,6 +13,9 @@ import java.util.List;
 /**
  * A CPP tokenizer
  * relying on antlr CPP14 grammar
+ *  if unpreprocessed C file use this class
+ *
+ *  Warning comments are removed
  */
 public class CPPTokenizer extends Tokenizer {
 
@@ -23,6 +26,7 @@ public class CPPTokenizer extends Tokenizer {
         ANTLRInputStream inputStream = new ANTLRInputStream(reader);
         CPP14Lexer lexer = new CPP14Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
+        commonTokenStream.fill();
         List<Token> list = commonTokenStream.getTokens();
         String[] result = new String[list.size()];
         for (int i = 0; i < list.size(); i++) {

@@ -42,7 +42,7 @@ public class TwitterTokenizer extends Tokenizer {
                 sw.append((char) ch);
                 ch = reader.read();
             }
-            if (sw.length() < maxWordLength || !DROP_LONG_TOKENS) {
+            if (sw.length()>0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
                 sw.setLength(maxWordLength);
                 String s = check(sw.toString());
                 tokens.add(applyAllTokenPreprocessorTo(s));

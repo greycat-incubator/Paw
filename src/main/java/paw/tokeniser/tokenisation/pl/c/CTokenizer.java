@@ -13,6 +13,9 @@ import java.util.List;
 /**
  * A C tokenizer
  * relying on antlr C grammar
+ * works on preprocessed files
+ *
+ * Comments are removed
  */
 public class CTokenizer extends Tokenizer {
 
@@ -23,6 +26,7 @@ public class CTokenizer extends Tokenizer {
         ANTLRInputStream inputStream = new ANTLRInputStream(reader);
         CLexer lexer = new CLexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
+        commonTokenStream.fill();
         List<Token> list = commonTokenStream.getTokens();
         String[] result = new String[list.size()];
         for (int i = 0; i < list.size(); i++) {

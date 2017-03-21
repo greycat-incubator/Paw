@@ -5,6 +5,9 @@ import paw.tokeniser.tokenisation.misc.SimpleTokenizer;
 import paw.tokeniser.tokenisation.misc.TwitterTokenizer;
 import paw.tokeniser.tokenisation.misc.UTFTokeniser;
 import paw.tokeniser.tokenisation.nl.EnglishTokenizer;
+import paw.tokeniser.tokenisation.pl.c.CTokenizer;
+import paw.tokeniser.tokenisation.pl.cpp.CPPTokenizer;
+import paw.tokeniser.tokenisation.pl.java.JavaTokenizer;
 
 public class TokenizerType {
 
@@ -13,9 +16,20 @@ public class TokenizerType {
      */
     public static final byte IDENTITY = 1;
     public static final byte SIMPLE = 2;
-    public static final byte ENGLISH = 3;
-    public static final byte UTF = 4;
-    public static final byte TWITTER = 5;
+    public static final byte UTF = 3;
+    public static final byte TWITTER = 4;
+
+    /**
+     * Natural language
+     */
+    public static final byte ENGLISH = 5;
+
+    /**
+     *
+     */
+    public static final byte C = 10;
+    public static final byte CPP = 11;
+    public static final byte JAVA = 12;
 
     /**
      * Convert a Tokenizer type that represent a byte to a readable String representation
@@ -29,12 +43,18 @@ public class TokenizerType {
                 return IdentityTokenizer.ID;
             case SIMPLE:
                 return SimpleTokenizer.ID;
-            case ENGLISH:
-                return EnglishTokenizer.ID;
             case UTF:
                 return UTFTokeniser.ID;
             case TWITTER:
                 return TwitterTokenizer.ID;
+            case ENGLISH:
+                return EnglishTokenizer.ID;
+            case C:
+                return CTokenizer.ID;
+            case CPP:
+                return CPPTokenizer.ID;
+            case JAVA:
+                return JavaTokenizer.ID;
             default:
                 return "unknown";
         }
@@ -52,12 +72,18 @@ public class TokenizerType {
                 return IDENTITY;
             case SimpleTokenizer.ID:
                 return SIMPLE;
-            case EnglishTokenizer.ID:
-                return ENGLISH;
             case UTFTokeniser.ID:
                 return UTF;
             case TwitterTokenizer.ID:
                 return TWITTER;
+            case EnglishTokenizer.ID:
+                return ENGLISH;
+            case CTokenizer.ID:
+                return C;
+            case CPPTokenizer.ID:
+                return CPP;
+            case JavaTokenizer.ID:
+                return JAVA;
             default:
                 return -1;
         }
