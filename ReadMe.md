@@ -1,7 +1,7 @@
 # Paw: A Tokenizer plugin for GreyCat
 
 
-![GreyCat-version](https://img.shields.io/badge/GreyCat--version-5--SNAPSHOT-green.svg)
+![GreyCat-version](https://img.shields.io/badge/GreyCat--version-6--SNAPSHOT-green.svg)
 
 ![version](https://img.shields.io/badge/version-0.1--SNAPSHOT-blue.svg)
 

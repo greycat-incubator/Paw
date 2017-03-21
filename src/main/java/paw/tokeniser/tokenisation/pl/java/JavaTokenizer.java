@@ -23,6 +23,8 @@ import static com.github.javaparser.Providers.provider;
 public class JavaTokenizer extends Tokenizer {
     public final static String ID = "JAVA TOKENIZER";
 
+    private boolean removeComments = false;
+
     @Override
     public String[] tokenize(Reader reader) throws IOException {
 
@@ -35,15 +37,25 @@ public class JavaTokenizer extends Tokenizer {
                 JavaToken jt = l.get(i);
 
                 String s = applyAllTokenPreprocessorTo(jt.getText());
-                if(!s.contains("\n"))
-                    s =  s.trim();
-                if(!s.isEmpty()){
+                if (removeComments && (s.contains("/**") || s.contains("//")))
+                    s = "";
+                if (!s.contains("\n"))
+                    s = s.trim();
+                if (!s.isEmpty()) {
                     tokens.add(s);
                 }
             }
             return tokens.toArray(new String[tokens.size()]);
         }
         return new String[0];
+    }
+
+    public boolean isRemoveComments() {
+        return removeComments;
+    }
+
+    public void setRemoveComments(boolean removeComments) {
+        this.removeComments = removeComments;
     }
 
     @Override
