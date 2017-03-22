@@ -9,6 +9,11 @@ import paw.greycat.actions.Pawctions;
 public class PawPlugin implements Plugin {
     @Override
     public void start(Graph graph) {
+
+        /**
+         * Vocabulary
+         */
+
         graph.actionRegistry()
                 .getOrCreateDeclaration(PawctionNames.RETRIEVE_VOCABULARY_NODE)
                 .setParams()
@@ -31,6 +36,55 @@ public class PawPlugin implements Plugin {
                 .setParams(Type.STRING)
                 .setDescription("Retrieve all the node corresponding to tokens stored in a variable and create one if not existing")
                 .setFactory(params -> Pawctions.getOrCreateTokensFromVar((String) params[0]));
+
+
+        /**
+         *  Tokenization
+         */
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.CREATE_TOKENIZER)
+                .setParams(Type.STRING, Type.INT, Type.BOOL)
+                .setDescription("Create a tokenizer stored it in a var (first parameter) of a given type (second parameter) that keep or not its delimiter (third parameter)")
+                .setFactory(params -> Pawctions.createTokenizer((String) params[0], (byte) params[1], (boolean) params[2]));
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.ADD_PREPROCESSORS)
+                .setParams(Type.STRING, Type.INT_ARRAY)
+                .setDescription("add multiple preprocessor (second parameter) to a tokenizer stored in a var (first parameter) of ")
+                .setFactory(params -> {
+                    if (params[1] != null) {
+                        return Pawctions.addPreprocessors((String) params[0], (byte[]) params[1]);
+                    } else return null;
+                });
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.SET_TYPE_OF_TOKEN)
+                .setParams(Type.STRING, Type.STRING)
+                .setDescription("Set the type of token (second parameter) the tokenizer stored in a var(first parameter) receive as input")
+                .setFactory(params -> Pawctions.setTypOfToken((String) params[0], (String) params[1]));
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.SET_REMOVE_COMMENTS)
+                .setParams(Type.STRING, Type.BOOL)
+                .setDescription("Remove comment option working only with the java tokenizer")
+                .setFactory(params -> Pawctions.setRemoveContent((String) params[0], (boolean) params[1]));
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.TOKENIZE_FROM_STRINGS)
+                .setParams(Type.STRING, Type.STRING_ARRAY)
+                .setDescription("tokenize some contents (second parameter) using a tokenizer stored in var(first parameter)")
+                .setFactory(params -> {
+                    if (params[1] != null) {
+                        return Pawctions.tokenizeFromStrings((String) params[0], (String[]) params[1]);
+                    } else return null;
+                });
+
+        graph.actionRegistry()
+                .getOrCreateDeclaration(PawctionNames.TOKENIZE_FROM_VAR)
+                .setParams(Type.STRING, Type.STRING)
+                .setDescription("tokenize some content store in a var (second parameter) using a tokenizer stored in var(first parameter)")
+                .setFactory(params -> Pawctions.tokenizeFromVar((String) params[0], (String) params[1]));
     }
 
     @Override

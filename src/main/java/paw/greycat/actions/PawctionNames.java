@@ -12,9 +12,13 @@ public class PawctionNames {
      * Tokenization
      */
     public static String CREATE_TOKENIZER = "createTokenizer";
-    public static String ADD_PREPROCESSOR = "addPreprocessor";
+    public static String ADD_PREPROCESSORS = "addPreprocessors";
     public static String SET_TYPE_OF_TOKEN = "setTypeOfToken";
     public static String SET_REMOVE_COMMENTS = "setRemoveContent";
     public static String TOKENIZE_FROM_VAR = "tokenizeFromVar";
     public static String TOKENIZE_FROM_STRINGS = "tokenizeFromStrings";
+
+    /**
+     * Tokenized Content
+     */
 }

@@ -16,16 +16,17 @@ public class TokenizationTasks {
 
     public static Task createTokenizer(String tokenizerVar, byte tokenizerType, boolean keepDelimiter) {
         Tokenizer tokenizer = TokenizerFactory.getTokenizer(tokenizerType);
+        assert tokenizer != null;
         tokenizer.setKeepDelimiter(keepDelimiter);
         return newTask().then(injectAsVar(tokenizerVar, tokenizer));
     }
 
-    public static Task addPreprocessor(String tokenizerVar, byte... preprocessorType) {
+    public static Task addPreprocessors(String tokenizerVar, byte... preprocessorType) {
         return newTask()
                 .thenDo(ctx -> {
                     Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                    for (int i = 0; i < preprocessorType.length; i++) {
-                        tokenizer.addPreprocessor(PreprocessorFactory.getPreprocessor(preprocessorType[i]));
+                    for (byte aPreprocessorType : preprocessorType) {
+                        tokenizer.addPreprocessor(PreprocessorFactory.getPreprocessor(aPreprocessorType));
                     }
                     ctx.setVariable(tokenizerVar, tokenizer);
                     ctx.continueTask();
@@ -55,7 +56,7 @@ public class TokenizationTasks {
                 });
     }
 
-    public static Task tokenizeFromString(String tokenizerVar, String... content) {
+    public static Task tokenizeFromStrings(String tokenizerVar, String... content) {
         return newTask()
                 .then(injectAsVar("mycontents", content))
                 .pipe(tokenizeFromVar(tokenizerVar, "mycontents"));
