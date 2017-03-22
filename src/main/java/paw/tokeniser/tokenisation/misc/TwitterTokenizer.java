@@ -33,7 +33,7 @@ public class TwitterTokenizer extends Tokenizer {
                     )
 
             {
-                if (!Character.isSpaceChar((char) ch) && isKeepingDelimiterActivate())
+                if (isKeepingDelimiterActivate())
                     tokens.add(applyAllTokenPreprocessorTo(String.valueOf((char) ch)));
                 ch = reader.read();
             }

@@ -28,7 +28,7 @@ public class EnglishTokenizer extends Tokenizer {
             while (ch != -1 && (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z')
                     && (ch < '0' || ch > '9')
                     ) {
-                if (!Character.isSpaceChar((char) ch) && isKeepingDelimiterActivate())
+                if (isKeepingDelimiterActivate())
                     tokens.add(String.valueOf((char) ch));
                 ch = reader.read();
             }

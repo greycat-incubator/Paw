@@ -39,9 +39,13 @@ public class JavaTokenizer extends Tokenizer {
                 String s = applyAllTokenPreprocessorTo(jt.getText());
                 if (removeComments && (s.contains("/**") || s.contains("//")))
                     s = "";
-                if (!s.contains("\n"))
-                    s = s.trim();
-                if (!s.isEmpty()) {
+                if (!isKeepingDelimiterActivate()) {
+                    if (!s.contains("\n"))
+                        s = s.trim();
+                    if (!s.isEmpty()) {
+                        tokens.add(s);
+                    }
+                }else{
                     tokens.add(s);
                 }
             }
