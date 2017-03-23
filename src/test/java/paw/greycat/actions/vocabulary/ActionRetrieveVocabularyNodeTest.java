@@ -1,7 +1,7 @@
 package paw.greycat.actions.vocabulary;
 
-import greycat.ActionFunction;
-import greycat.TaskContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import paw.greycat.actions.ActionTest;
 
@@ -13,6 +13,16 @@ import static paw.PawConstants.VOCABULARY_NODE_NAME;
 import static paw.greycat.actions.Pawctions.retrieveVocabularyNode;
 
 class ActionRetrieveVocabularyNodeTest extends ActionTest {
+
+    @BeforeEach
+    public void setUp(){
+    initGraph();
+    }
+
+    @AfterEach
+    public void tearDown(){
+        removeGraph();
+    }
 
     @Test
     public void inexistingVocabularyNode() {
@@ -28,7 +38,7 @@ class ActionRetrieveVocabularyNodeTest extends ActionTest {
                         }
                 )
                 .execute(graph, null);
-        assertEquals(1, i[0]);
+        assertEquals(counter, i[0]);
     }
 
     @Test
@@ -45,18 +55,16 @@ class ActionRetrieveVocabularyNodeTest extends ActionTest {
                 .defineAsVar("idR")
                 .then(retrieveVocabularyNode())
                 .thenDo(context -> context.continueWith(context.wrap(context.resultAsNodes().get(0).id())))
-                .thenDo(new ActionFunction() {
-                            public void eval(TaskContext context) {
-                                assertEquals(context.resultAsNodes().size(), 1);
-                                assertEquals(context.longVar("idA"), context.longVar("idR"));
-
-                                i[0]++;
-                                context.continueTask();
-                            }
+                .thenDo(context -> {
+                            assertEquals(context.resultAsNodes().size(), 1);
+                            assertEquals(context.longVar("idA"), context.longVar("idR"));
+                            assertEquals(context.longVar("idA"), context.longResult());
+                            i[0]++;
+                            context.continueTask();
                         }
                 )
                 .execute(graph, null);
-        assertEquals(1, i[0]);
+        assertEquals(counter, i[0]);
     }
 
 }

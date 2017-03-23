@@ -14,7 +14,7 @@ public class VocabularyTasks {
         return newTask()
                 .readGlobalIndex(ENTRY_POINT_INDEX, ENTRY_POINT_NODE_NAME, VOCABULARY_NODE_NAME)
                 .then(ifEmptyThen(
-                        newTask().then(executeAtWorldAndTime("0", "$BEGINNING_OF_TIME",
+                        newTask().then(executeAtWorldAndTime("0", ""+BEGINNING_OF_TIME,
                                 newTask()
                                         .createNode()
                                         .setAttribute(ENTRY_POINT_NODE_NAME, Type.STRING, VOCABULARY_NODE_NAME)
