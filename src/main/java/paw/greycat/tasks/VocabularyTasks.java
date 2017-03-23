@@ -35,8 +35,6 @@ public class VocabularyTasks {
 
     public static Task getOrCreateTokensFromStrings(String... tokens) {
         return newTask()
-                .pipe(retrieveVocabularyNode())
-                .defineAsVar("Vocabulary")
                 .then(injectAsVar("myTokens", tokens))
                 .pipe(getOrCreateTokensFromVar("myTokens"));
 
@@ -44,6 +42,8 @@ public class VocabularyTasks {
 
     public static Task getOrCreateTokensFromVar(String variable) {
         return newTask()
+                .pipe(retrieveVocabularyNode())
+                .defineAsVar("Vocabulary")
                 .readVar(variable)
                 .map(retrieveToken())
                 .flat();
