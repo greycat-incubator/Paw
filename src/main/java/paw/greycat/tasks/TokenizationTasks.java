@@ -18,7 +18,10 @@ public class TokenizationTasks {
         Tokenizer tokenizer = TokenizerFactory.getTokenizer(tokenizerType);
         assert tokenizer != null;
         tokenizer.setKeepDelimiter(keepDelimiter);
-        return newTask().then(injectAsVar(tokenizerVar, tokenizer));
+        return newTask().thenDo(ctx -> {
+            ctx.setGlobalVariable(tokenizerVar, tokenizer);
+            ctx.continueTask();
+        });
     }
 
     public static Task addPreprocessors(String tokenizerVar, byte... preprocessorType) {

@@ -82,5 +82,10 @@ public class EnglishTokenizer extends Tokenizer {
         return s;
     }
 
+    @Override
+    public String toString() {
+        return ID + "\n" + super.toString();
+    }
+
 
 }
