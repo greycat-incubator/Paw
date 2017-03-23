@@ -11,20 +11,20 @@ class UTFTokeniserTest {
     private UTFTokeniser tokenizer;
 
     @BeforeEach
-    public void buildTokenizer(){
+    void buildTokenizer(){
         this.tokenizer = new UTFTokeniser();
         tokenizer.addPreprocessor(new LowerCasePreprocessor());
 
     }
 
     @Test
-    public void emptyText(){
+    void emptyText(){
         String[] result = tokenizer.tokenize("");
         assertEquals(1,result.length);
     }
 
     @Test
-    public void oneWordText(){
+    void oneWordText(){
         String[] result = tokenizer.tokenize("this");
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this",result[0]);
@@ -32,14 +32,14 @@ class UTFTokeniserTest {
 
 
     @Test
-    public void twoWordText(){
+    void twoWordText(){
         String[] result = tokenizer.tokenize("this is");
         Assertions.assertEquals(2,result.length);
         Assertions.assertEquals("this",result[0]);
     }
 
     @Test
-    public void twoLinesTextD(){
+    void twoLinesTextD(){
         tokenizer.setKeepDelimiter(true);
         String[] result = tokenizer.tokenize("this is \n me");
         Assertions.assertEquals(4,result.length);
@@ -47,14 +47,14 @@ class UTFTokeniserTest {
     }
 
     @Test
-    public void twoLinesText(){
+    void twoLinesText(){
         String[] result = tokenizer.tokenize("this is \n me");
         Assertions.assertEquals(3,result.length);
         Assertions.assertEquals("me",result[2]);
     }
 
     @Test
-    public void utfTest(){
+    void utfTest(){
         String[] result = tokenizer.tokenize("mais où est-ce-que ça se trouve?");
         Assertions.assertEquals(8,result.length);
         Assertions.assertEquals("où",result[1]);

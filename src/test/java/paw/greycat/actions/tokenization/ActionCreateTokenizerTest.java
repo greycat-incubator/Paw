@@ -1,7 +1,5 @@
 package paw.greycat.actions.tokenization;
 
-import greycat.Node;
-import greycat.TaskResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,24 +11,22 @@ import paw.tokeniser.tokenisation.pl.java.JavaTokenizer;
 
 import static greycat.Tasks.newTask;
 import static org.junit.jupiter.api.Assertions.*;
-import static paw.PawConstants.TOKEN_NAME;
 import static paw.greycat.actions.Pawctions.createTokenizer;
-import static paw.greycat.actions.Pawctions.getOrCreateTokensFromStrings;
 
 class ActionCreateTokenizerTest extends ActionTest{
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         initGraph();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         removeGraph();
     }
 
     @Test
-    public void createATokenizer(){
+    void createATokenizer(){
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -46,7 +42,7 @@ class ActionCreateTokenizerTest extends ActionTest{
         assertEquals(counter, i[0]);
     }
     @Test
-    public void createAnotherTokenizer(){
+    void createAnotherTokenizer(){
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -63,18 +59,16 @@ class ActionCreateTokenizerTest extends ActionTest{
     }
 
     @Test
-    public void createANotExistingTokenizer(){
+    void createANotExistingTokenizer(){
         int counter = 0;
         final int[] i = {0};
-        assertThrows(AssertionError.class,() -> {
-            newTask()
-                    .then(createTokenizer("tokenizer", (byte) 22,true))
-                    .thenDo(ctx -> {
-                        i[0]++;
-                        ctx.continueTask();
-                    })
-                    .execute(graph, null);
-        });
+        assertThrows(AssertionError.class,() -> newTask()
+                .then(createTokenizer("tokenizer", (byte) 22,true))
+                .thenDo(ctx -> {
+                    i[0]++;
+                    ctx.continueTask();
+                })
+                .execute(graph, null));
         assertEquals(counter, i[0]);
     }
 

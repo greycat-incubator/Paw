@@ -6,29 +6,26 @@ import org.junit.jupiter.api.Test;
 import paw.PawConstants;
 import paw.greycat.actions.ActionTest;
 import paw.tokeniser.Tokenizer;
-import paw.tokeniser.preprocessing.LowerCasePreprocessor;
-import paw.tokeniser.preprocessing.PreprocessorType;
 import paw.tokeniser.tokenisation.TokenizerType;
 
 import static greycat.Tasks.newTask;
 import static org.junit.jupiter.api.Assertions.*;
-import static paw.greycat.actions.Pawctions.addPreprocessors;
 import static paw.greycat.actions.Pawctions.createTokenizer;
 import static paw.greycat.actions.Pawctions.setTypOfToken;
 
 class ActionSetTypeOfTokenTest extends ActionTest {
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         initGraph();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         removeGraph();
     }
 
     @Test
-    public void setTypeOfTokenOnce(){
+    void setTypeOfTokenOnce(){
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -45,7 +42,7 @@ class ActionSetTypeOfTokenTest extends ActionTest {
     }
 
     @Test
-    public void setTypeOfTokenTwice(){
+    void setTypeOfTokenTwice(){
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -63,7 +60,7 @@ class ActionSetTypeOfTokenTest extends ActionTest {
     }
 
     @Test
-    public void dontSetTypeOfToken(){
+    void dontSetTypeOfToken(){
         int counter = 1;
         final int[] i = {0};
         newTask()

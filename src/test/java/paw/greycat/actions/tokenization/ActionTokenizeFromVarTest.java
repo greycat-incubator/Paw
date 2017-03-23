@@ -5,31 +5,28 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import paw.greycat.actions.ActionTest;
-import paw.tokeniser.Tokenizer;
-import paw.tokeniser.preprocessing.LowerCasePreprocessor;
-import paw.tokeniser.preprocessing.PreprocessorType;
 import paw.tokeniser.tokenisation.TokenizerType;
 
 import static greycat.Tasks.newTask;
 import static org.junit.jupiter.api.Assertions.*;
-import static paw.greycat.actions.Pawctions.addPreprocessors;
 import static paw.greycat.actions.Pawctions.createTokenizer;
 import static paw.greycat.actions.Pawctions.tokenizeFromVar;
 
+@SuppressWarnings("Duplicates")
 class ActionTokenizeFromVarTest extends ActionTest {
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         initGraph();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         removeGraph();
     }
 
     @Test
-    public void tokenizeFromSingleStringInVar() {
+    void tokenizeFromSingleStringInVar() {
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -52,7 +49,7 @@ class ActionTokenizeFromVarTest extends ActionTest {
     }
 
     @Test
-    public void tokenizeFromSeveralStringInVar() {
+    void tokenizeFromSeveralStringInVar() {
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -75,7 +72,7 @@ class ActionTokenizeFromVarTest extends ActionTest {
     }
 
     @Test
-    public void tokenizeFromNotExistingVar() {
+    void tokenizeFromNotExistingVar() {
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -91,7 +88,7 @@ class ActionTokenizeFromVarTest extends ActionTest {
     }
 
     @Test
-    public void tokenizeFromVarStoringSomethingElse() {
+    void tokenizeFromVarStoringSomethingElse() {
         int counter = 0;
         final int[] i = {0};
         assertThrows(AssertionError.class, () ->

@@ -19,18 +19,18 @@ import static paw.greycat.actions.Pawctions.getOrCreateTokensFromVar;
 @SuppressWarnings("Duplicates")
 class ActionGetOrCreateTokensFromVarTest extends ActionTest {
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         initGraph();
     }
 
     @AfterEach
-    public void tearDown() {
+    void tearDown() {
         removeGraph();
     }
 
 
     @Test
-    public void createOneToken() {
+    void createOneToken() {
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -49,34 +49,32 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
     }
 
     @Test
-    public void createSeveralTokens() {
+    void createSeveralTokens() {
         int counter = 1;
         final int[] i = {0};
         newTask()
                 .then(injectAsVar("mytok", new String[]{"Token", "Token2", "Token3", "Token4"}))
                 .then(getOrCreateTokensFromVar("mytok"))
-                .thenDo(new ActionFunction() {
-                    public void eval(TaskContext ctx) {
-                        TaskResult<Node> tok = ctx.resultAsNodes();
-                        assertEquals(4, tok.size());
-                        Node n = tok.get(0);
-                        assertEquals("Token", n.get(TOKEN_NAME));
-                        Node n1 = tok.get(1);
-                        assertEquals("Token2", n1.get(TOKEN_NAME));
-                        Node n2 = tok.get(2);
-                        assertEquals("Token3", n2.get(TOKEN_NAME));
-                        Node n3 = tok.get(3);
-                        assertEquals("Token4", n3.get(TOKEN_NAME));
-                        i[0]++;
-                        ctx.continueTask();
-                    }
+                .thenDo(ctx -> {
+                    TaskResult<Node> tok = ctx.resultAsNodes();
+                    assertEquals(4, tok.size());
+                    Node n = tok.get(0);
+                    assertEquals("Token", n.get(TOKEN_NAME));
+                    Node n1 = tok.get(1);
+                    assertEquals("Token2", n1.get(TOKEN_NAME));
+                    Node n2 = tok.get(2);
+                    assertEquals("Token3", n2.get(TOKEN_NAME));
+                    Node n3 = tok.get(3);
+                    assertEquals("Token4", n3.get(TOKEN_NAME));
+                    i[0]++;
+                    ctx.continueTask();
                 })
                 .execute(graph, null);
         assertEquals(counter, i[0]);
     }
 
     @Test
-    public void retrieveOneAlreadyExistingToken() {
+    void retrieveOneAlreadyExistingToken() {
         int counter = 2;
         final int[] i = {0};
         newTask()
@@ -99,7 +97,7 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
     }
 
     @Test
-    public void retrieveSeveralAlreadyExistingToken() {
+    void retrieveSeveralAlreadyExistingToken() {
         int counter = 2;
         final int[] i = {0};
         newTask()
@@ -130,7 +128,7 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
     }
 
     @Test
-    public void mix() {
+    void mix() {
         int counter = 2;
         final int[] i = {0};
         newTask()
@@ -158,7 +156,6 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
                     assertNotEquals(ctx.variable("ids").get(3), ctx.resultAsNodes().get(3).id());
                     ctx.continueTask();
                 })
-                //.addHook(new VerboseHook())
                 .execute(graph, null);
         assertEquals(counter, i[0]);
     }

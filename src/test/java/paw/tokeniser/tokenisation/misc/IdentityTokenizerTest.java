@@ -13,19 +13,19 @@ class IdentityTokenizerTest {
     private IdentityTokenizer tokenizer;
 
     @BeforeEach
-    public void buildTokenizer(){
+    void buildTokenizer(){
         this.tokenizer = new IdentityTokenizer();
         tokenizer.addPreprocessor(new LowerCasePreprocessor());
     }
 
     @Test
-    public void emptyText(){
+    void emptyText(){
         String[] result = tokenizer.tokenize("");
         Assertions.assertEquals(0,result.length);
     }
 
     @Test
-    public void oneWordText(){
+    void oneWordText(){
         String[] result = tokenizer.tokenize("this");
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this",result[0]);
@@ -33,34 +33,34 @@ class IdentityTokenizerTest {
 
 
     @Test
-    public void twoWordText(){
+    void twoWordText(){
         String[] result = tokenizer.tokenize("this is");
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is",result[0]);
     }
 
     @Test
-    public void twoLinesText(){
+    void twoLinesText(){
         String[] result = tokenizer.tokenize("this is \n me");
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is \n me",result[0]);
     }
 
     @Test
-    public void capitalLetterText(){
+    void capitalLetterText(){
         String[] result = tokenizer.tokenize("THIS is");
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is",result[0]);
     }
 
     @Test
-    public void emptyTextR() throws IOException {
+    void emptyTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader(""));
         Assertions.assertEquals(1,result.length);
     }
 
     @Test
-    public void oneWordTextR() throws IOException {
+    void oneWordTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader("this"));
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this",result[0]);
@@ -68,21 +68,21 @@ class IdentityTokenizerTest {
 
 
     @Test
-    public void twoWordTextR() throws IOException {
+    void twoWordTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader("this is"));
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is",result[0]);
     }
 
     @Test
-    public void twoLinesTextR() throws IOException {
+    void twoLinesTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader("this is \n me"));
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is \n me",result[0]);
     }
 
     @Test
-    public void capitalLetterTextR() throws IOException {
+    void capitalLetterTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader("THIS is"));
         Assertions.assertEquals(1,result.length);
         Assertions.assertEquals("this is",result[0]);

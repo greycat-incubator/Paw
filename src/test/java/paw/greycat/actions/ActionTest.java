@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public abstract class ActionTest {
     protected Graph graph;
-    protected long startMemory;
 
     @SuppressWarnings("Duplicates")
     protected void initGraph() {
@@ -36,18 +35,11 @@ public abstract class ActionTest {
             root.addToRelation("children", n1);
 
             //create some index
-            selfPointer.graph.index(0, BEGINNING_OF_TIME, "roots", new Callback<NodeIndex>() {
-                public void on(NodeIndex rootsIndex) {
-                    rootsIndex.addToIndex(root, "name");
-                }
-            });
-            selfPointer.graph.index(0, BEGINNING_OF_TIME, "nodes", new Callback<NodeIndex>() {
-
-                public void on(NodeIndex nodesIndex) {
-                    nodesIndex.addToIndex(n0, "name");
-                    nodesIndex.addToIndex(n1, "name");
-                    nodesIndex.addToIndex(root, "name");
-                }
+            selfPointer.graph.index(0, BEGINNING_OF_TIME, "roots", rootsIndex -> rootsIndex.addToIndex(root, "name"));
+            selfPointer.graph.index(0, BEGINNING_OF_TIME, "nodes", nodesIndex -> {
+                nodesIndex.addToIndex(n0, "name");
+                nodesIndex.addToIndex(n1, "name");
+                nodesIndex.addToIndex(root, "name");
             });
         });
     }

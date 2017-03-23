@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 
 class CPPTokenizerTest {
-    public final static String c_prog = "#include <iostream>\n" +
+    private final static String c_prog = "#include <iostream>\n" +
             "#include <iomanip>\n" +
             "#include \"Time.h\"\n" +
             "using namespace std;\n" +
@@ -39,8 +39,8 @@ class CPPTokenizerTest {
             "     else\n" +
             "          return false;\n" +
             "}";
-    public final static String not_c_prog = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-    public final static String h_file = "#ifndef TIME_H\n" +
+    private final static String not_c_prog = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+    private final static String h_file = "#ifndef TIME_H\n" +
             "#define TIME_H\n" +
             "\n" +
             "class Time\n" +
@@ -61,35 +61,35 @@ class CPPTokenizerTest {
             "};\n" +
             " \n" +
             "#endif";
-    public final static String empty = "";
+    private final static String empty = "";
     private CPPTokenizer tokenizer;
 
     @BeforeEach
-    public void buildTokenizer() {
+    void buildTokenizer() {
         this.tokenizer = new CPPTokenizer();
     }
 
     @Test
-    public void cProg() {
+    void cProg() {
         String[] result = tokenizer.tokenize(c_prog);
         System.out.println(Arrays.toString(result));
     }
 
 
     @Test
-    public void notCProg() {
+    void notCProg() {
         String[] result = tokenizer.tokenize(not_c_prog);
         System.out.println(Arrays.toString(result));
     }
 
     @Test
-    public void hFile() {
+    void hFile() {
         String[] result = tokenizer.tokenize(h_file);
         System.out.println(Arrays.toString(result));
     }
 
     @Test
-    public void empty() {
+    void empty() {
         String[] result = tokenizer.tokenize(empty);
         System.out.println(Arrays.toString(result));
     }

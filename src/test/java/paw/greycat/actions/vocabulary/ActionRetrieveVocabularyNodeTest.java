@@ -15,17 +15,17 @@ import static paw.greycat.actions.Pawctions.retrieveVocabularyNode;
 class ActionRetrieveVocabularyNodeTest extends ActionTest {
 
     @BeforeEach
-    public void setUp(){
+    void setUp(){
     initGraph();
     }
 
     @AfterEach
-    public void tearDown(){
+    void tearDown(){
         removeGraph();
     }
 
     @Test
-    public void inexistingVocabularyNode() {
+    void inexistingVocabularyNode() {
         int counter = 1;
         final int[] i = {0};
         newTask()
@@ -42,7 +42,7 @@ class ActionRetrieveVocabularyNodeTest extends ActionTest {
     }
 
     @Test
-    public void checkThatNodeIsCreatedOnce() {
+    void checkThatNodeIsCreatedOnce() {
         int counter = 1;
         final int[] i = {0};
         newTask()
