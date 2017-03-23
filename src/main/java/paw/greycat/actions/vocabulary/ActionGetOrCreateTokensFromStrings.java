@@ -19,24 +19,22 @@ public class ActionGetOrCreateTokensFromStrings implements Action {
     public void eval(TaskContext ctx) {
         VocabularyTasks.getOrCreateTokensFromStrings(_tokenString)
                 .executeFrom(ctx, ctx.result(), SchedulerAffinity.SAME_THREAD,
-                new Callback<TaskResult>() {
-                    public void on(TaskResult res) {
-                        Exception exceptionDuringTask = null;
-                        if (res != null) {
-                            if (res.output() != null) {
-                                ctx.append(res.output());
+                        res -> {
+                            Exception exceptionDuringTask = null;
+                            if (res != null) {
+                                if (res.output() != null) {
+                                    ctx.append(res.output());
+                                }
+                                if (res.exception() != null) {
+                                    exceptionDuringTask = res.exception();
+                                }
                             }
-                            if (res.exception() != null) {
-                                exceptionDuringTask = res.exception();
+                            if (exceptionDuringTask != null) {
+                                ctx.endTask(res, exceptionDuringTask);
+                            } else {
+                                ctx.continueWith(res);
                             }
-                        }
-                        if (exceptionDuringTask != null) {
-                            ctx.endTask(res, exceptionDuringTask);
-                        } else {
-                            ctx.continueWith(res);
-                        }
-                    }
-                });
+                        });
     }
 
     @Override

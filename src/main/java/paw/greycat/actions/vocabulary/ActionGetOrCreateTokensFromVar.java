@@ -19,22 +19,20 @@ public class ActionGetOrCreateTokensFromVar implements Action {
     public void eval(TaskContext ctx) {
         VocabularyTasks.getOrCreateTokensFromVar(_variable)
                 .executeFrom(ctx, ctx.result(), SchedulerAffinity.SAME_THREAD,
-                        new Callback<TaskResult>() {
-                            public void on(TaskResult res) {
-                                Exception exceptionDuringTask = null;
-                                if (res != null) {
-                                    if (res.output() != null) {
-                                        ctx.append(res.output());
-                                    }
-                                    if (res.exception() != null) {
-                                        exceptionDuringTask = res.exception();
-                                    }
+                        res -> {
+                            Exception exceptionDuringTask = null;
+                            if (res != null) {
+                                if (res.output() != null) {
+                                    ctx.append(res.output());
                                 }
-                                if (exceptionDuringTask != null) {
-                                    ctx.endTask(res, exceptionDuringTask);
-                                } else {
-                                    ctx.continueWith(res);
+                                if (res.exception() != null) {
+                                    exceptionDuringTask = res.exception();
                                 }
+                            }
+                            if (exceptionDuringTask != null) {
+                                ctx.endTask(res, exceptionDuringTask);
+                            } else {
+                                ctx.continueWith(res);
                             }
                         });
     }
