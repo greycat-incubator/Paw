@@ -1,6 +1,7 @@
 package paw.greycat.tasks;
 
 import greycat.Task;
+import paw.tokeniser.TokenPreprocessor;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.preprocessing.PreprocessorFactory;
 import paw.tokeniser.tokenisation.TokenizerFactory;
@@ -29,7 +30,9 @@ public class TokenizationTasks {
                 .thenDo(ctx -> {
                     Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
                     for (byte aPreprocessorType : preprocessorType) {
-                        tokenizer.addPreprocessor(PreprocessorFactory.getPreprocessor(aPreprocessorType));
+                        TokenPreprocessor prep = PreprocessorFactory.getPreprocessor(aPreprocessorType);
+                        assert prep != null;
+                        tokenizer.addPreprocessor(prep);
                     }
                     ctx.setVariable(tokenizerVar, tokenizer);
                     ctx.continueTask();
@@ -90,6 +93,7 @@ public class TokenizationTasks {
                         newTask()
                                 .thenDo(ctx -> {
                                     Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                                    assert (ctx.result().get(0) instanceof String);
                                     String content = ctx.resultAsStrings().get(0);
                                     ctx.continueWith(ctx.wrap(tokenizer.tokenize(content)));
                                 })
