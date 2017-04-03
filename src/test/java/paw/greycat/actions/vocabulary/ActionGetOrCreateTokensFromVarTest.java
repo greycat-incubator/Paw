@@ -1,8 +1,6 @@
 package paw.greycat.actions.vocabulary;
 
-import greycat.ActionFunction;
 import greycat.Node;
-import greycat.TaskContext;
 import greycat.TaskResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,9 +9,9 @@ import paw.greycat.actions.ActionTest;
 
 import static greycat.Tasks.newTask;
 import static mylittleplugin.MyLittleActions.injectAsVar;
-import static org.junit.jupiter.api.Assertions.*;
-import static paw.PawConstants.TOKEN_NAME;
-import static paw.greycat.actions.Pawctions.getOrCreateTokensFromStrings;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static paw.PawConstants.NODE_NAME;
 import static paw.greycat.actions.Pawctions.getOrCreateTokensFromVar;
 
 @SuppressWarnings("Duplicates")
@@ -40,7 +38,7 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
                     TaskResult<Node> tok = ctx.resultAsNodes();
                     assertEquals(1, tok.size());
                     Node n = tok.get(0);
-                    assertEquals("Token7", n.get(TOKEN_NAME));
+                    assertEquals("Token7", n.get(NODE_NAME));
                     i[0]++;
                     ctx.continueTask();
                 })
@@ -59,13 +57,13 @@ class ActionGetOrCreateTokensFromVarTest extends ActionTest {
                     TaskResult<Node> tok = ctx.resultAsNodes();
                     assertEquals(4, tok.size());
                     Node n = tok.get(0);
-                    assertEquals("Token", n.get(TOKEN_NAME));
+                    assertEquals("Token", n.get(NODE_NAME));
                     Node n1 = tok.get(1);
-                    assertEquals("Token2", n1.get(TOKEN_NAME));
+                    assertEquals("Token2", n1.get(NODE_NAME));
                     Node n2 = tok.get(2);
-                    assertEquals("Token3", n2.get(TOKEN_NAME));
+                    assertEquals("Token3", n2.get(NODE_NAME));
                     Node n3 = tok.get(3);
-                    assertEquals("Token4", n3.get(TOKEN_NAME));
+                    assertEquals("Token4", n3.get(NODE_NAME));
                     i[0]++;
                     ctx.continueTask();
                 })

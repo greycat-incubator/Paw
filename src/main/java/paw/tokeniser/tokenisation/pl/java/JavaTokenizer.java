@@ -5,6 +5,7 @@ import com.github.javaparser.JavaToken;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import paw.tokeniser.Tokenizer;
+import paw.tokeniser.tokenisation.TokenizerType;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -45,7 +46,7 @@ public class JavaTokenizer extends Tokenizer {
                     if (!s.isEmpty()) {
                         tokens.add(s);
                     }
-                }else{
+                } else {
                     tokens.add(s);
                 }
             }
@@ -65,5 +66,10 @@ public class JavaTokenizer extends Tokenizer {
     @Override
     public String toString() {
         return ID + "\n" + super.toString();
+    }
+
+    @Override
+    public byte getType() {
+        return TokenizerType.JAVA;
     }
 }

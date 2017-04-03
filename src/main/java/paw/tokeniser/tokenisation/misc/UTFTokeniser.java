@@ -1,6 +1,7 @@
 package paw.tokeniser.tokenisation.misc;
 
 import paw.tokeniser.Tokenizer;
+import paw.tokeniser.tokenisation.TokenizerType;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -75,5 +76,10 @@ public class UTFTokeniser extends Tokenizer {
     @Override
     public String toString() {
         return ID + "\n" + super.toString();
+    }
+
+    @Override
+    public byte getType() {
+        return TokenizerType.UTF;
     }
 }

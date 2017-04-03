@@ -13,8 +13,20 @@ import java.io.Reader;
 import static greycat.Tasks.newTask;
 import static mylittleplugin.MyLittleActions.injectAsVar;
 
+/**
+ * Class  wrapping tokenization method into tasks
+ */
 public class TokenizationTasks {
 
+
+    /**
+     * Task creating a tokenizer
+     *
+     * @param tokenizerVar  variable in which the tokenizer should be stored
+     * @param tokenizerType type of the tokenizer
+     * @param keepDelimiter should the delimiter appear in the tokenized contents
+     * @return Task with the current result unchanged
+     */
     public static Task createTokenizer(String tokenizerVar, byte tokenizerType, boolean keepDelimiter) {
         Tokenizer tokenizer = TokenizerFactory.getTokenizer(tokenizerType);
         assert tokenizer != null;
@@ -25,6 +37,12 @@ public class TokenizationTasks {
         });
     }
 
+    /**
+     * Task adding preprocessors to a tokenizer stored in a variable
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param preprocessorType type of preprocessor
+     * @return Task with the current result unchanged
+     */
     public static Task addPreprocessors(String tokenizerVar, byte... preprocessorType) {
         return newTask()
                 .thenDo(ctx -> {
@@ -39,6 +57,12 @@ public class TokenizationTasks {
                 });
     }
 
+    /**
+     * Task setting the type of Token that the tokenizer stored in a var expect to receive
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param type of the token
+     * @return Task with the current result unchanged
+     */
     public static Task setTypeOfToken(String tokenizerVar, String type) {
         return newTask()
                 .thenDo(ctx -> {
@@ -49,6 +73,12 @@ public class TokenizationTasks {
                 });
     }
 
+    /**
+     * Task only working in the case of a Java Tokenizer stored in a var that indicate wether the tokenizer should keep comments
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param removeComments should the comments be kept
+     * @return Task with the current result unchanged
+     */
     public static Task setRemoveComment(String tokenizerVar, boolean removeComments) {
         return newTask()
                 .thenDo(ctx -> {
@@ -62,15 +92,28 @@ public class TokenizationTasks {
                 });
     }
 
+    /**
+     * Task to tokenize an array of String using a tokenizer stored in a var
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param content array of String to tokenize
+     * @return Task with array of tokenized content in the current result
+     */
     public static Task tokenizeFromStrings(String tokenizerVar, String... content) {
         return newTask()
                 .then(injectAsVar("mycontents", content))
                 .pipe(tokenizeFromVar(tokenizerVar, "mycontents"));
     }
 
-    public static Task tokenizeFromReader(String tokenizerVar, Reader... reader) {
+    /**
+     * Task to tokenize from several readers using a tokenizer stored in a var
+     *
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param readers      array of readers
+     * @return Task with array of tokenized content in the current result
+     */
+    public static Task tokenizeFromReader(String tokenizerVar, Reader... readers) {
         return newTask()
-                .inject(reader)
+                .inject(readers)
                 .map(
                         newTask()
                                 .thenDo(ctx -> {
@@ -86,6 +129,12 @@ public class TokenizationTasks {
                 );
     }
 
+    /**
+     * Task to tokenize String stored in a var using a tokenizer stored in a var
+     * @param tokenizerVar variable in which the tokenizer is stored
+     * @param variable in which the string to tokenize are stored
+     * @return Task with array of tokenized content in the current result
+     */
     public static Task tokenizeFromVar(String tokenizerVar, String variable) {
         return newTask()
                 .readVar(variable)

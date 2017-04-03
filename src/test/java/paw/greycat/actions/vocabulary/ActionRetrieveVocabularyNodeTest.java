@@ -6,10 +6,8 @@ import org.junit.jupiter.api.Test;
 import paw.greycat.actions.ActionTest;
 
 import static greycat.Tasks.newTask;
-import static org.junit.jupiter.api.Assertions.*;
-import static paw.PawConstants.ENTRY_POINT_INDEX;
-import static paw.PawConstants.ENTRY_POINT_NODE_NAME;
-import static paw.PawConstants.VOCABULARY_NODE_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static paw.PawConstants.*;
 import static paw.greycat.actions.Pawctions.retrieveVocabularyNode;
 
 class ActionRetrieveVocabularyNodeTest extends ActionTest {
@@ -50,7 +48,7 @@ class ActionRetrieveVocabularyNodeTest extends ActionTest {
                 .then(retrieveVocabularyNode())
                 .thenDo(context -> context.continueWith(context.wrap(context.resultAsNodes().get(0).id())))
                 .defineAsVar("idA")
-                .readGlobalIndex(ENTRY_POINT_INDEX, ENTRY_POINT_NODE_NAME, VOCABULARY_NODE_NAME)
+                .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, NODE_TYPE_VOCABULARY)
                 .thenDo(context -> context.continueWith(context.wrap(context.resultAsNodes().get(0).id())))
                 .defineAsVar("idR")
                 .then(retrieveVocabularyNode())

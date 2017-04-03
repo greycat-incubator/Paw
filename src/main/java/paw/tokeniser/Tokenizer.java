@@ -6,7 +6,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import static paw.PawConstants.NO_TYPE_TOKEN;
+import static paw.PawConstants.TYPE_TOKEN_WITHOUT_TYPE;
 
 /**
  * Tokenizer abstract class
@@ -93,7 +93,7 @@ public abstract class Tokenizer {
      * Type Of Token
      */
 
-    private String typeOfToken = NO_TYPE_TOKEN;
+    private String typeOfToken = TYPE_TOKEN_WITHOUT_TYPE;
 
     /**
      * Method to set a type of Token, type can be used for further filtering
@@ -148,4 +148,7 @@ public abstract class Tokenizer {
     public void setKeepDelimiter(boolean keepDelimiter) {
         this.keepDelimiter = keepDelimiter;
     }
+
+
+    public abstract byte getType();
 }

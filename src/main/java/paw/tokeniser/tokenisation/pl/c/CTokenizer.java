@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import paw.tokeniser.Tokenizer;
+import paw.tokeniser.tokenisation.TokenizerType;
 import paw.tokeniser.tokenisation.pl.c.antlr.CLexer;
 
 import java.io.IOException;
@@ -38,5 +39,10 @@ public class CTokenizer extends Tokenizer {
     @Override
     public String toString() {
         return ID + "\n" + super.toString();
+    }
+
+    @Override
+    public byte getType() {
+        return TokenizerType.C;
     }
 }

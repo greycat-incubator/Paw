@@ -9,7 +9,7 @@ import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
 
 import static greycat.Tasks.newTask;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static paw.greycat.actions.Pawctions.createTokenizer;
 import static paw.greycat.actions.Pawctions.setTypOfToken;
 
@@ -67,7 +67,7 @@ class ActionSetTypeOfTokenTest extends ActionTest {
                 .then(createTokenizer("tokenizer", TokenizerType.ENGLISH,true))
                 .thenDo(ctx -> {
                     Tokenizer tok = (Tokenizer) ctx.variable("tokenizer").get(0);
-                    assertEquals(PawConstants.NO_TYPE_TOKEN,tok.getTypeOfToken());
+                    assertEquals(PawConstants.TYPE_TOKEN_WITHOUT_TYPE, tok.getTypeOfToken());
                     i[0]++;
                     ctx.continueTask();
                 })
