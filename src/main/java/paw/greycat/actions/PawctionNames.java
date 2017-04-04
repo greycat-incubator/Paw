@@ -21,4 +21,6 @@ public class PawctionNames {
     /**
      * Tokenized Content
      */
+    public static String UPDATE_OR_CREATE_TOKENIZE_RELATION_FROM_STRING = "uocTokenizeRelationFromString";
+    public static String UPDATE_OR_CREATE_TOKENIZE_RELATION_FROM_VAR = "uocTokenizeRelationFromVar";
 }

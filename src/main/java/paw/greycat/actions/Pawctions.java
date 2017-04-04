@@ -3,6 +3,8 @@ package paw.greycat.actions;
 import greycat.Action;
 import paw.greycat.actions.tokenization.*;
 import paw.greycat.actions.tokenization.java.ActionSetRemoveComment;
+import paw.greycat.actions.tokenizedcontent.ActionUpdateOrCreateTokenizeRelationFromString;
+import paw.greycat.actions.tokenizedcontent.ActionUpdateOrCreateTokenizeRelationFromVar;
 import paw.greycat.actions.vocabulary.ActionGetOrCreateTokensFromStrings;
 import paw.greycat.actions.vocabulary.ActionGetOrCreateTokensFromVar;
 import paw.greycat.actions.vocabulary.ActionRetrieveVocabularyNode;
@@ -48,6 +50,15 @@ public class Pawctions {
 
     public static Action tokenizeFromVar(String tokenizerVar, String varToTokenize) {
         return new ActionTokenizeFromVar(tokenizerVar, varToTokenize);
+    }
+
+    // Tokenized Content
+    public static Action updateOrCreateTokenizeRelationFromString(String tokenizerVar, String nodeVar, String content, String relationName) {
+        return new ActionUpdateOrCreateTokenizeRelationFromString(tokenizerVar, nodeVar, content, relationName);
+    }
+
+    public static Action updateOrCreateTokenizeRelationFromVar(String tokenizerVar, String nodeVar, String contentVar, String... relationNames) {
+        return new ActionUpdateOrCreateTokenizeRelationFromVar(tokenizerVar, nodeVar, contentVar, relationNames);
     }
 
 }
