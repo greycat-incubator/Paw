@@ -71,19 +71,20 @@ public class VocabularyTasks {
      */
     static Task retrieveToken() {
         return newTask()
-                .defineAsVar("token")
+                .defineAsVar(TOKEN_VAR)
                 .thenDo(ctx -> {
                     String token = ctx.resultAsStrings().get(0);
-                    ctx.setVariable("firstLetter", token.substring(0, SIZE_OF_INDEX));
+                    ctx.setVariable(INDEXING_LETTER_VAR, token.substring(0, SIZE_OF_INDEX));
                     ctx.continueTask();
                 })
                 .pipe(retrieveVocabularyNode())
-                .traverse(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NODE_NAME_TOKENINDEX, "{{firstLetter}}")
+                .defineAsVar(VOCABULARY_VAR)
+                .traverse(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NODE_NAME_TOKENINDEX, "{{" + INDEXING_LETTER_VAR + "}}")
                 .then(ifEmptyThen(
                         createIndexing()
                 ))
-                .defineAsVar("indexing")
-                .traverse(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NODE_NAME, "{{token}}")
+                .defineAsVar(NEW_TOKEN_INDEX_VAR)
+                .traverse(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NODE_NAME, "{{" + TOKEN_VAR + "}}")
                 .then(
                         ifEmptyThen(
                                 createToken()
@@ -97,6 +98,7 @@ public class VocabularyTasks {
      * @return Task with the corresponding node in the result
      */
     private static Task createToken() {
+        String NEW_TOKEN_VAR = "newToken";
         return newTask()
                 .then(executeAtWorldAndTime(
                         "0",
@@ -105,13 +107,13 @@ public class VocabularyTasks {
                                 //Token
                                 .createNode()
                                 .timeSensitivity("-1", "0")
-                                .setAttribute(NODE_NAME, Type.STRING, "{{token}}")
+                                .setAttribute(NODE_NAME, Type.STRING, "{{" + TOKEN_VAR + "}}")
                                 .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TOKEN)
-                                .addVarToRelation(RELATION_TOKEN_TO_TOKENINDEX, "indexing")
-                                .defineAsVar("newToken")
-                                .readVar("indexing")
-                                .addVarToRelation(RELATION_INDEX_TOKENINDEX_TO_TOKEN, "newToken", NODE_NAME)
-                                .readVar("newToken")
+                                .addVarToRelation(RELATION_TOKEN_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR)
+                                .defineAsVar(NEW_TOKEN_VAR)
+                                .then(readUpdatedTimeVar(NEW_TOKEN_INDEX_VAR))
+                                .addVarToRelation(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NEW_TOKEN_VAR, NODE_NAME)
+                                .readVar(NEW_TOKEN_VAR)
                 ));
     }
 
@@ -129,12 +131,17 @@ public class VocabularyTasks {
                                 //Token
                                 .createNode()
                                 .timeSensitivity("-1", "0")
-                                .setAttribute(NODE_NAME_TOKENINDEX, Type.STRING, "{{firstLetter}}")
+                                .setAttribute(NODE_NAME_TOKENINDEX, Type.STRING, "{{" + INDEXING_LETTER_VAR + "}}")
                                 .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TOKENINDEX)
-                                .defineAsVar("newTokenIndex")
-                                .readVar("Vocabulary")
-                                .addVarToRelation(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, "newTokenIndex", NODE_NAME_TOKENINDEX)
-                                .readVar("newTokenIndex")
+                                .defineAsVar(NEW_TOKEN_INDEX_VAR)
+                                .then(readUpdatedTimeVar(VOCABULARY_VAR))
+                                .addVarToRelation(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR, NODE_NAME_TOKENINDEX)
+                                .readVar(NEW_TOKEN_INDEX_VAR)
                 ));
     }
+
+    private static String VOCABULARY_VAR = "vocabulary";
+    private static String INDEXING_LETTER_VAR = "firstLetter";
+    private static String NEW_TOKEN_INDEX_VAR = "newTokenIndexVar";
+    private static String TOKEN_VAR = "token";
 }
