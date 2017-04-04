@@ -74,7 +74,8 @@ public class VocabularyTasks {
                 .defineAsVar(TOKEN_VAR)
                 .thenDo(ctx -> {
                     String token = ctx.resultAsStrings().get(0);
-                    ctx.setVariable(INDEXING_LETTER_VAR, token.substring(0, SIZE_OF_INDEX));
+                    String sub = (token.length() > SIZE_OF_INDEX) ? token.substring(0, SIZE_OF_INDEX) : token;
+                    ctx.setVariable(INDEXING_LETTER_VAR, sub);
                     ctx.continueTask();
                 })
                 .pipe(retrieveVocabularyNode())
@@ -100,6 +101,7 @@ public class VocabularyTasks {
     private static Task createToken() {
         String NEW_TOKEN_VAR = "newToken";
         return newTask()
+
                 .then(executeAtWorldAndTime(
                         "0",
                         "" + BEGINNING_OF_TIME,
@@ -114,7 +116,8 @@ public class VocabularyTasks {
                                 .then(readUpdatedTimeVar(NEW_TOKEN_INDEX_VAR))
                                 .addVarToRelation(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NEW_TOKEN_VAR, NODE_NAME)
                                 .readVar(NEW_TOKEN_VAR)
-                ));
+                ))
+                ;
     }
 
     /**

@@ -57,6 +57,8 @@ public class TokenizedRelationTasks {
                                 )
                         ,
                         newTask()
+                                .thenDo(ctx ->
+                                        ctx.continueTask())
                                 .thenDo(ctx -> ctx.endTask(ctx.result(), new IllegalArgumentException("number of content to Tokenize and relation Name are not similar")))
                 );
     }
