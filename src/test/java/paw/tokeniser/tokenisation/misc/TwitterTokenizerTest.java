@@ -20,7 +20,7 @@ class TwitterTokenizerTest {
     @Test
     void emptyText(){
         String[] result = tokenizer.tokenize("");
-        assertEquals(1,result.length);
+        assertEquals(0, result.length);
     }
 
     @Test
@@ -34,20 +34,20 @@ class TwitterTokenizerTest {
     @Test
     void twoWordText(){
         String[] result = tokenizer.tokenize("this is");
-        Assertions.assertEquals(2,result.length);
+        Assertions.assertEquals(3, result.length);
         Assertions.assertEquals("this",result[0]);
     }
 
     @Test
     void twoLinesText(){
         String[] result = tokenizer.tokenize("this is \n me");
-        Assertions.assertEquals(4,result.length);
-        Assertions.assertEquals("\n",result[2]);
+        Assertions.assertEquals(7, result.length);
+        Assertions.assertEquals("\n", result[4]);
     }
 
     @Test
     void tweet(){
         String[] result = tokenizer.tokenize("What can you do with LSTM? \"The magic of LSTM neural networks\" by @assaadm http://buff.ly/2m0b2pm  #neuralnetworks #machinelearning");
-        Assertions.assertEquals(26,result.length);
+        Assertions.assertEquals(43, result.length);
     }
 }

@@ -22,7 +22,7 @@ class EnglishTokenizerTest {
     @Test
     void emptyText(){
         String[] result = tokenizer.tokenize("");
-        assertEquals(1,result.length);
+        assertEquals(0, result.length);
     }
 
     @Test
@@ -44,8 +44,8 @@ class EnglishTokenizerTest {
     void twoLinesTextD(){
         tokenizer.setKeepDelimiter(true);
         String[] result = tokenizer.tokenize("this is \n me");
-        Assertions.assertEquals(4,result.length);
-        Assertions.assertEquals("\n",result[2]);
+        Assertions.assertEquals(7, result.length);
+        Assertions.assertEquals("\n", result[4]);
     }
 
     @Test

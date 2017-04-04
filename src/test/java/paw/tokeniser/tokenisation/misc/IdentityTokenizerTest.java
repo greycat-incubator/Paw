@@ -56,7 +56,7 @@ class IdentityTokenizerTest {
     @Test
     void emptyTextR() throws IOException {
         String[] result = tokenizer.tokenize(new StringReader(""));
-        Assertions.assertEquals(1,result.length);
+        Assertions.assertEquals(0, result.length);
     }
 
     @Test
