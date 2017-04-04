@@ -51,7 +51,7 @@ public class TokenizedRelationTasks {
                 .ifThenElse(ctx -> ctx.result().size() == relationName.length,
                         newTask()
                                 .pipeTo(tokenizeFromVar(tokenizerVar, contentVar), "tokenizedContentsVar")
-                                .readVar(nodeVar)
+                                .then(readUpdatedTimeVar(nodeVar))
                                 .forEach(
                                         updateOrCreateTokenizeRelationOfNode(tokenizerVar, "tokenizedContentsVar", relationName)
                                 )
@@ -148,7 +148,7 @@ public class TokenizedRelationTasks {
                 .map(
                         newTask()
                                 .thenDo((TaskContext ctx) -> {
-                                            long[] action = (long[]) ctx.result().get(0);
+                                    long[] action = new long[]{(long) ctx.result().get(0), (long) ctx.result().get(1)};
                                             LongLongMap mapPatch = (LongLongMap) ctx.variable("mapPatch").get(0);
                                             int index = (int) ctx.variable("i").get(0);
                                             Relation relation = (Relation) ctx.variable("relation").get(0);
@@ -179,7 +179,8 @@ public class TokenizedRelationTasks {
                                             } else if (action[1] == MinimumEditDistance.INSERTION) {
                                                 relation.insert(newIndex, action[0]);
                                                 mapPatch.put(index, action[0]);
-                                                newTask().lookup("" + action[0])
+                                                newTask()
+                                                        .lookup("" + action[0])
                                                         .defineAsVar("token")
                                                         .traverse(RELATION_INDEX_TOKEN_TO_TYPEINDEX, NODE_NAME_TYPEINDEX, type)
                                                         .then(ifEmptyThen(
@@ -187,7 +188,7 @@ public class TokenizedRelationTasks {
                                                                         .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
                                                                                 newTask()
                                                                                         .createNode()
-                                                                                        .setAttribute(NODE_NAME_TYPEINDEX, Type.STRING, "{{type}}")
+                                                                                        .setAttribute(NODE_NAME_TYPEINDEX, Type.STRING, type)
                                                                                         .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TYPEINDEX)
                                                                                         .addVarToRelation(RELATION_TYPEINDEX_TO_TOKEN, "token")
                                                                                         .defineAsVar("typeIndex")
@@ -196,7 +197,6 @@ public class TokenizedRelationTasks {
                                                                                         .readVar("typeIndex")
                                                                         ))))
                                                         .defineAsVar("typeIndex")
-
                                                         .traverse(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX, INVERTEDINDEX_TOKENIZEDCONTENT, "" + relationNodeId)
                                                         .then(
                                                                 ifEmptyThen(
@@ -204,9 +204,15 @@ public class TokenizedRelationTasks {
                                                                                 .then(
                                                                                         executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
                                                                                                 newTask()
-                                                                                                        .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationNodeId}}")
+                                                                                                        .createNode()
+                                                                                                        .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationId}}")
                                                                                                         .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_INVERTED_INDEX)
-                                                                                                        .setAttribute("type", Type.STRING, "{{type}}")
+                                                                                                        .thenDo(ctx1 ->
+                                                                                                        {
+                                                                                                            Node node = ctx1.resultAsNodes().get(0);
+                                                                                                            node.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
+                                                                                                            ctx1.continueTask();
+                                                                                                        })
                                                                                                         .defineAsVar("invertedIndex")
                                                                                                         .addVarToRelation(RELATION_INVERTEDINDEX_TO_TOKEN, "token")
                                                                                                         .addVarToRelation(RELATION_INVERTEDINDEX_TO_TYPEINDEX, "typeIndex")
@@ -312,7 +318,6 @@ public class TokenizedRelationTasks {
                                                                         .createNode()
                                                                         .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationNodeId}}")
                                                                         .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_INVERTED_INDEX)
-                                                                        .setAttribute("type", Type.STRING, "{{type}}")
                                                                         .thenDo(ctx ->
                                                                         {
                                                                             Node node = ctx.resultAsNodes().get(0);
