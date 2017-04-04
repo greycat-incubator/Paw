@@ -313,6 +313,12 @@ public class TokenizedRelationTasks {
                                                                         .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationNodeId}}")
                                                                         .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_INVERTED_INDEX)
                                                                         .setAttribute("type", Type.STRING, "{{type}}")
+                                                                        .thenDo(ctx ->
+                                                                        {
+                                                                            Node node = ctx.resultAsNodes().get(0);
+                                                                            node.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
+                                                                            ctx.continueTask();
+                                                                        })
                                                                         .defineAsVar("invertedIndex")
                                                                         .addVarToRelation(RELATION_INVERTEDINDEX_TO_TOKEN, "token")
                                                                         .addVarToRelation(RELATION_INVERTEDINDEX_TO_TYPEINDEX, "typeIndex")
