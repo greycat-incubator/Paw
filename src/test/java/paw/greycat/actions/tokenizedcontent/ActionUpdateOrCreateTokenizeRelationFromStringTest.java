@@ -208,18 +208,34 @@ class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
 
     @Test
     public void oneRelationUpdatedTwice() {
-
+        int counter = 1;
+        final int[] i = {0};
+        newTask()
+                .travelInTime("0")
+                .then(retrieveVocabularyNode())
+                .then(createTokenizer("tokenizer", TokenizerType.ENGLISH, true))
+                .readGlobalIndex("roots")
+                .defineAsVar("nodevar")
+                .then(updateOrCreateTokenizeRelationFromString("tokenizer", "nodevar", text1, "text1"))
+                .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT)
+                .traverse(RELATION_TOKENIZECONTENT_TO_TOKENS)
+                .defineAsVar("res0")
+                .travelInTime("1")
+                .then(updateOrCreateTokenizeRelationFromString("tokenizer", "nodevar", text11, "text1"))
+                .travelInTime("2")
+                .then(updateOrCreateTokenizeRelationFromString("tokenizer", "nodevar", text1, "text1"))
+                .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT)
+                .traverse(RELATION_TOKENIZECONTENT_TO_TOKENS)
+                .thenDo(ctx -> {
+                    assertEquals(13, ctx.resultAsNodes().size());
+                    for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
+                        assertEquals(((Node) ctx.variable("res0").get(j)).id(), ctx.resultAsNodes().get(j).id());
+                    }
+                    i[0]++;
+                    ctx.continueTask();
+                })
+                .execute(graph, null);
+        assertEquals(counter, i[0]);
     }
-
-    @Test
-    public void twoRelationUpdated() {
-
-    }
-
-    @Test
-    public void twoRelationUpdatedTwice() {
-
-    }
-
 
 }
