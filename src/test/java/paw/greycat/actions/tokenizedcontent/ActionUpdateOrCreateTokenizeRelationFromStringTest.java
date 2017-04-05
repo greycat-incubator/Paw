@@ -19,9 +19,8 @@ import static paw.greycat.actions.Pawctions.*;
 @SuppressWarnings("Duplicates")
 class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
 
-    static String text1 = "the apple was looking over the cloud";
-    static String text2 = "an orange was riding a skateboard";
-    static String text11 = "the strange apple was indeed looking at the cloud";
+    private static String text1 = "the apple was looking over the cloud";
+    private static String text11 = "the strange apple was indeed looking at the cloud";
 
     @BeforeEach
     void setUp() {
@@ -34,7 +33,7 @@ class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
     }
 
     @Test
-    public void oneRelationOneText() {
+    void oneRelationOneText() {
         int counter = 4;
         final int[] i = {0};
         newTask()
@@ -90,9 +89,10 @@ class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
     }
 
     @Test
-    public void TwoRelationTwoText() {
+    void TwoRelationTwoText() {
         int counter = 4;
         final int[] i = {0};
+        String text2 = "an orange was riding a skateboard";
         newTask()
                 .travelInTime("0")
                 .then(retrieveVocabularyNode())
@@ -148,7 +148,7 @@ class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
     }
 
     @Test
-    public void oneRelationUpdated() {
+    void oneRelationUpdated() {
         int counter = 4;
         final int[] i = {0};
         newTask()
@@ -207,7 +207,7 @@ class ActionUpdateOrCreateTokenizeRelationFromStringTest extends ActionTest {
     }
 
     @Test
-    public void oneRelationUpdatedTwice() {
+    void oneRelationUpdatedTwice() {
         int counter = 1;
         final int[] i = {0};
         newTask()
