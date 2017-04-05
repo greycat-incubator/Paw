@@ -1,3 +1,18 @@
+/**
+ * Copyright 2017 Matthieu Jimenez.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package paw.greycat.tasks;
 
 import greycat.Node;
@@ -148,7 +163,7 @@ public class TokenizedRelationTasks {
                 .map(
                         newTask()
                                 .thenDo((TaskContext ctx) -> {
-                                    long[] action = new long[]{(long) ctx.result().get(0), (long) ctx.result().get(1)};
+                                            long[] action = new long[]{(long) ctx.result().get(0), (long) ctx.result().get(1)};
                                             LongLongMap mapPatch = (LongLongMap) ctx.variable("mapPatch").get(0);
                                             int index = (int) ctx.variable("i").get(0);
                                             Relation relation = (Relation) ctx.variable("relation").get(0);
