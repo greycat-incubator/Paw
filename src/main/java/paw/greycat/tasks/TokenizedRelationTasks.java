@@ -33,6 +33,7 @@ import static greycat.Constants.BEGINNING_OF_TIME;
 import static greycat.Tasks.newTask;
 import static mylittleplugin.MyLittleActions.*;
 import static paw.PawConstants.*;
+import static paw.greycat.tasks.TokenizationTasks.tokenizeFromStrings;
 import static paw.greycat.tasks.TokenizationTasks.tokenizeFromVar;
 import static paw.greycat.tasks.VocabularyTasks.retrieveToken;
 
@@ -47,9 +48,11 @@ public class TokenizedRelationTasks {
      */
     public static Task updateOrCreateTokenizeRelationFromString(String tokenizerVar, String nodeVar, String content, String relationName) {
         return newTask()
-                .inject(content)
-                .defineAsVar("contentVar")
-                .pipe(updateOrCreateTokenizeRelationFromVar(tokenizerVar, nodeVar, "contentVar", relationName));
+                .pipeTo(tokenizeFromStrings(tokenizerVar,content),"tokenizedContentsVar")
+                .then(readUpdatedTimeVar(nodeVar))
+                .forEach(
+                        updateOrCreateTokenizeRelationOfNode(tokenizerVar, "tokenizedContentsVar", new String[]{relationName})
+                );
 
     }
 
@@ -72,8 +75,6 @@ public class TokenizedRelationTasks {
                                 )
                         ,
                         newTask()
-                                .thenDo(ctx ->
-                                        ctx.continueTask())
                                 .thenDo(ctx -> ctx.endTask(ctx.result(), new IllegalArgumentException("number of content to Tokenize and relation Name are not similar")))
                 );
     }
@@ -204,7 +205,7 @@ public class TokenizedRelationTasks {
                                                                                 newTask()
                                                                                         .createNode()
                                                                                         .setAttribute(NODE_NAME_TYPEINDEX, Type.STRING, type)
-                                                                                        .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TYPEINDEX)
+                                                                                        //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TYPEINDEX)
                                                                                         .addVarToRelation(RELATION_TYPEINDEX_TO_TOKEN, "token")
                                                                                         .defineAsVar("typeIndex")
                                                                                         .readVar("token")
@@ -221,7 +222,7 @@ public class TokenizedRelationTasks {
                                                                                                 newTask()
                                                                                                         .createNode()
                                                                                                         .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationId}}")
-                                                                                                        .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_INVERTED_INDEX)
+                                                                                                        //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_INVERTED_INDEX)
                                                                                                         .thenDo(ctx1 ->
                                                                                                         {
                                                                                                             Node node = ctx1.resultAsNodes().get(0);
@@ -279,20 +280,6 @@ public class TokenizedRelationTasks {
      */
     private static Task createTokenRelation(String tokenizerVar) {
         return newTask()
-                .createNode()
-                .defineAsVar("relationNode")
-                .thenDo(ctx -> {
-                    Node node = ctx.resultAsNodes().get(0);
-                    ctx.setVariable("relationNodeId", node.id());
-                    node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
-                    ctx.continueTask();
-                })
-                .addVarToRelation(RELATION_TOKENIZECONTENT_TO_NODE, "nodeVar")
-                .setAttribute(NODE_NAME, Type.STRING, "{{relationVar}}")
-                .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TOKENIZE_CONTENT)
-
-                .readVar("nodeVar")
-                .addVarToRelation(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, "relationNode", NODE_NAME)
 
                 .readVar(tokenizerVar)
                 .thenDo(
@@ -303,6 +290,26 @@ public class TokenizedRelationTasks {
                             ctx.setVariable("tokenizerType", tokenizer.getType());
                             ctx.continueTask();
                         })
+                .createNode()
+                .setAttribute(NODE_NAME, Type.STRING, "{{relationVar}}")
+                .setAttribute(TOKENIZE_CONTENT_TYPE, Type.STRING, "{{type}}")
+                .setAttribute(TOKENIZE_CONTENT_DELIMITERS, Type.BOOL, "{{delimiters}}")
+                .setAttribute(TOKENIZE_CONTENT_TOKENIZERTYPE,Type.INT,"{{tokenizerType}}")
+
+                .thenDo(ctx -> {
+                    Node node = ctx.resultAsNodes().get(0);
+                    ctx.setVariable("relationNodeId", node.id());
+                    node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
+                    ctx.continueTask();
+                })
+
+                .addVarToRelation(RELATION_TOKENIZECONTENT_TO_NODE, "nodeVar")
+
+
+                .defineAsVar("relationNode")
+
+                .readVar("nodeVar")
+                .addVarToRelation(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, "relationNode", NODE_NAME)
 
                 .readVar("tokenizedContentVar")
                 .forEach(
@@ -310,44 +317,14 @@ public class TokenizedRelationTasks {
                                 .defineAsVar("token")
                                 .traverse(RELATION_INDEX_TOKEN_TO_TYPEINDEX, NODE_NAME_TYPEINDEX, "{{type}}")
                                 .then(ifEmptyThen(
-                                        newTask()
-                                                .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
-                                                        newTask()
-                                                                .createNode()
-                                                                .setAttribute(NODE_NAME_TYPEINDEX, Type.STRING, "{{type}}")
-                                                                .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TYPEINDEX)
-                                                                .addVarToRelation(RELATION_TYPEINDEX_TO_TOKEN, "token")
-                                                                .defineAsVar("typeIndex")
-                                                                .readVar("token")
-                                                                .addVarToRelation(RELATION_INDEX_TOKEN_TO_TYPEINDEX, "typeIndex", NODE_NAME_TYPEINDEX)
-                                                                .readVar("typeIndex")
-                                                ))))
+                                        createTypeIndex()
+                                ))
                                 .defineAsVar("typeIndex")
 
                                 .traverse(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX, INVERTEDINDEX_TOKENIZEDCONTENT, "{{relationNodeId}}")
                                 .then(
                                         ifEmptyThenElse(
-                                                newTask()
-                                                        .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
-                                                                newTask()
-                                                                        .createNode()
-                                                                        .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationNodeId}}")
-                                                                        .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_INVERTED_INDEX)
-                                                                        .thenDo(ctx ->
-                                                                        {
-                                                                            Node node = ctx.resultAsNodes().get(0);
-                                                                            node.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
-                                                                            ctx.continueTask();
-                                                                        })
-                                                                        .defineAsVar("invertedIndex")
-                                                                        .addVarToRelation(RELATION_INVERTEDINDEX_TO_TOKEN, "token")
-                                                                        .addVarToRelation(RELATION_INVERTEDINDEX_TO_TYPEINDEX, "typeIndex")
-                                                                        .readVar("typeIndex")
-                                                                        .addVarToRelation(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX, "invertedIndex", INVERTEDINDEX_TOKENIZEDCONTENT)
-                                                                        .readVar("invertedIndex")
-                                                                )
-                                                        )
-                                                ,
+                                                createInvertedIndex(),
                                                 newTask().then(checkForFuture())
                                         )
                                 )
@@ -363,11 +340,47 @@ public class TokenizedRelationTasks {
                                 .readVar("relationNode")
                                 .addVarToRelation(RELATION_TOKENIZECONTENT_TO_TOKENS, "token")
 
-                )
+                );
 
-                .readVar("relationNode")
-                .setAttribute(TOKENIZE_CONTENT_TYPE, Type.STRING, "{{type}}")
-                .setAttribute(TOKENIZE_CONTENT_DELIMITERS, Type.BOOL, "{{delimiters}}");
+    }
+
+    private static Task createInvertedIndex() {
+        return newTask()
+                .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
+                        newTask()
+                                .createNode()
+                                .setAttribute(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, "{{relationNodeId}}")
+                                //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_INVERTED_INDEX)
+                                .thenDo(ctx ->
+                                {
+                                    Node node = ctx.resultAsNodes().get(0);
+                                    node.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
+                                    ctx.continueTask();
+                                })
+                                .defineAsVar("invertedIndex")
+                                .addVarToRelation(RELATION_INVERTEDINDEX_TO_TOKEN, "token")
+                                .addVarToRelation(RELATION_INVERTEDINDEX_TO_TYPEINDEX, "typeIndex")
+                                .readVar("typeIndex")
+                                .addVarToRelation(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX, "invertedIndex", INVERTEDINDEX_TOKENIZEDCONTENT)
+                                .readVar("invertedIndex")
+                        )
+                );
+    }
+
+    private static Task createTypeIndex() {
+        return newTask()
+                .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
+                        newTask()
+                                .createNode()
+                                .setAttribute(NODE_NAME_TYPEINDEX, Type.STRING, "{{type}}")
+                                .timeSensitivity("-1", "0")
+                                //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TYPEINDEX)
+                                .addVarToRelation(RELATION_TYPEINDEX_TO_TOKEN, "token")
+                                .defineAsVar("typeIndex")
+                                .readVar("token")
+                                .addVarToRelation(RELATION_INDEX_TOKEN_TO_TYPEINDEX, "typeIndex", NODE_NAME_TYPEINDEX)
+                                .readVar("typeIndex")
+                ));
     }
 
 

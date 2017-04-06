@@ -40,12 +40,14 @@ public class PawConstants {
     public final static String NODE_NAME_TYPEINDEX = "typeOfToken";
 
     public final static String NODE_TYPE = "type";
-    public final static String NODE_TYPE_VOCABULARY = "Vocabulary";
-    public final static String NODE_TYPE_TOKENINDEX = "TokenIndex";
-    public final static String NODE_TYPE_TOKEN = "Token";
-    public final static String NODE_TYPE_TOKENIZE_CONTENT = "TokenizedContent";
-    public final static String NODE_TYPE_TYPEINDEX = "TypeIndex";
-    public final static String NODE_TYPE_INVERTED_INDEX = "InvertedIndex";
+    public final static String NODE_TYPE_VOCABULARY = "0";
+    /**
+     * public final static int NODE_TYPE_TOKENINDEX = "1";
+     * public final static int NODE_TYPE_TOKEN = "2";
+     * public final static int NODE_TYPE_TOKENIZE_CONTENT = "3";
+     * public final static int NODE_TYPE_TYPEINDEX = "4";
+     * public final static int NODE_TYPE_INVERTED_INDEX = "5";
+     */
 
     public final static int SIZE_OF_INDEX = 3;
 
@@ -54,6 +56,7 @@ public class PawConstants {
     public final static String TOKENIZE_CONTENT_PATCH = "patch";
     public final static String TOKENIZE_CONTENT_DELIMITERS = "delimiters";
     public final static String TOKENIZE_CONTENT_TYPE = "typeOfToken";
+    public final static String TOKENIZE_CONTENT_TOKENIZERTYPE = "typeOfTokenizer";
 
     public final static String INVERTEDINDEX_TOKENIZEDCONTENT = "tokenizedContent";
     public final static String INVERTEDINDEX_POSITION = "position";

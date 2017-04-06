@@ -63,7 +63,7 @@ class ActionRetrieveVocabularyNodeTest extends ActionTest {
                 .then(retrieveVocabularyNode())
                 .thenDo(context -> context.continueWith(context.wrap(context.resultAsNodes().get(0).id())))
                 .defineAsVar("idA")
-                .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, NODE_TYPE_VOCABULARY)
+                .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, String.valueOf(NODE_TYPE_VOCABULARY))
                 .thenDo(context -> context.continueWith(context.wrap(context.resultAsNodes().get(0).id())))
                 .defineAsVar("idR")
                 .then(retrieveVocabularyNode())

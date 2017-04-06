@@ -35,7 +35,7 @@ public class VocabularyTasks {
                 .then(executeAtWorldAndTime("0", "" + BEGINNING_OF_TIME,
                         newTask()
                                 .createNode()
-                                .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_VOCABULARY)
+                                .setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_VOCABULARY)
                                 .timeSensitivity("-1", "0")
                                 .addToGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE)
                 ));
@@ -48,10 +48,16 @@ public class VocabularyTasks {
      */
     public static Task retrieveVocabularyNode() {
         return newTask()
-                .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, NODE_TYPE_VOCABULARY)
+                .readVar("VOCABULARYNODE")
                 .then(ifEmptyThen(
-                        initializeVocabulary()
-                ));
+                        newTask()
+                                .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, NODE_TYPE_VOCABULARY)
+                                .then(ifEmptyThen(
+                                        initializeVocabulary()
+                                ))
+                        .defineAsGlobalVar("VOCABULARYNODE")
+                ))
+               ;
     }
 
     /**
@@ -125,7 +131,7 @@ public class VocabularyTasks {
                                 .createNode()
                                 .timeSensitivity("-1", "0")
                                 .setAttribute(NODE_NAME, Type.STRING, "{{" + TOKEN_VAR + "}}")
-                                .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TOKEN)
+                                //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TOKEN)
                                 .addVarToRelation(RELATION_TOKEN_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR)
                                 .defineAsVar(NEW_TOKEN_VAR)
                                 .then(readUpdatedTimeVar(NEW_TOKEN_INDEX_VAR))
@@ -150,7 +156,7 @@ public class VocabularyTasks {
                                 .createNode()
                                 .timeSensitivity("-1", "0")
                                 .setAttribute(NODE_NAME_TOKENINDEX, Type.STRING, "{{" + INDEXING_LETTER_VAR + "}}")
-                                .setAttribute(NODE_TYPE, Type.STRING, NODE_TYPE_TOKENINDEX)
+                                //.setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TOKENINDEX)
                                 .defineAsVar(NEW_TOKEN_INDEX_VAR)
                                 .then(readUpdatedTimeVar(VOCABULARY_VAR))
                                 .addVarToRelation(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR, NODE_NAME_TOKENINDEX)
