@@ -41,13 +41,13 @@ public class PawConstants {
 
     public final static String NODE_TYPE = "type";
     public final static String NODE_TYPE_VOCABULARY = "0";
-    /**
-     * public final static int NODE_TYPE_TOKENINDEX = "1";
-     * public final static int NODE_TYPE_TOKEN = "2";
-     * public final static int NODE_TYPE_TOKENIZE_CONTENT = "3";
-     * public final static int NODE_TYPE_TYPEINDEX = "4";
-     * public final static int NODE_TYPE_INVERTED_INDEX = "5";
-     */
+
+     public final static String NODE_TYPE_TOKENINDEX = "1";
+     public final static String NODE_TYPE_TOKEN = "2";
+     public final static String NODE_TYPE_TOKENIZE_CONTENT = "3";
+     public final static String NODE_TYPE_TYPEINDEX = "4";
+     public final static String NODE_TYPE_INVERTED_INDEX = "5";
+
 
     public final static int SIZE_OF_INDEX = 3;
 

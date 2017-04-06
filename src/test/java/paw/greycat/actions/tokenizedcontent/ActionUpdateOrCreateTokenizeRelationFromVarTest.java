@@ -18,6 +18,7 @@ package paw.greycat.actions.tokenizedcontent;
 import greycat.Node;
 import greycat.struct.IntArray;
 import greycat.struct.LongLongMap;
+import mylittleplugin.MyLittleActions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -184,6 +185,7 @@ class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
                 .then(updateOrCreateTokenizeRelationFromVar("tokenizer", "nodevar", "text1", "text1"))
                 .travelInTime("1")
                 .then(updateOrCreateTokenizeRelationFromVar("tokenizer", "nodevar", "text11", "text1"))
+                .then(MyLittleActions.readUpdatedTimeVar("nodevar"))
                 .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT)
                 .defineAsVar("tokenizedContent")
                 .thenDo(ctx -> {
