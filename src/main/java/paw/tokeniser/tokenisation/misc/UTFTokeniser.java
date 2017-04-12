@@ -33,7 +33,7 @@ public class UTFTokeniser extends Tokenizer {
     private final static int maxNumberOfDigitPerTerm = 4;
     private final static int maxNumOfSameConseqLetterPerTerm = 3;
     private final static int maxWordLength = 30;
-    private final static boolean DROP_LONG_TOKENS = true;
+    private final static boolean DROP_LONG_TOKENS = false;
 
 
     @Override
@@ -43,11 +43,12 @@ public class UTFTokeniser extends Tokenizer {
         while (ch != -1) {
 
             while (ch != -1 && !(Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)
-                    )
+                    ) {
 
-            {
-                if (isKeepingDelimiterActivate())
-                    tokens.add(applyAllTokenPreprocessorTo(String.valueOf((char) ch)));
+                if (isKeepingDelimiterActivate()) {
+                    String val = String.valueOf((char) ch);
+                    tokens.add(applyAllTokenPreprocessorTo(val));
+                }
                 ch = reader.read();
             }
             StringBuilder sw = new StringBuilder(maxWordLength);
@@ -55,10 +56,11 @@ public class UTFTokeniser extends Tokenizer {
                 sw.append((char) ch);
                 ch = reader.read();
             }
-            if (sw.length()>0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
+            if (sw.length() > 0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
                 sw.setLength(maxWordLength);
                 String s = check(sw.toString());
-                tokens.add(applyAllTokenPreprocessorTo(s));
+                if (s != null)
+                    tokens.add(applyAllTokenPreprocessorTo(s));
             }
         }
         return tokens.toArray(new String[tokens.size()]);
@@ -83,7 +85,7 @@ public class UTFTokeniser extends Tokenizer {
             ch = chNew;
             if (counter > maxNumOfSameConseqLetterPerTerm
                     || counterdigit > maxNumberOfDigitPerTerm)
-                return "";
+                return null;
         }
         return s;
     }

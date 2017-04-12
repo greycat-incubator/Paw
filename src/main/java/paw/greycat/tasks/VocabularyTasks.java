@@ -15,12 +15,17 @@
  */
 package paw.greycat.tasks;
 
+import greycat.Node;
 import greycat.Task;
 import greycat.Type;
+import greycat.struct.EGraph;
+import paw.greycat.indexing.WordIndex;
+import paw.greycat.indexing.radix.RadixTree;
 
 import static greycat.Constants.BEGINNING_OF_TIME;
 import static greycat.Tasks.newTask;
-import static mylittleplugin.MyLittleActions.*;
+import static mylittleplugin.MyLittleActions.executeAtWorldAndTime;
+import static mylittleplugin.MyLittleActions.ifEmptyThen;
 import static paw.PawConstants.*;
 
 public class VocabularyTasks {
@@ -38,6 +43,11 @@ public class VocabularyTasks {
                                 .setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_VOCABULARY)
                                 .timeSensitivity("-1", "0")
                                 .addToGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE)
+                                .thenDo(ctx -> {
+                                    Node node = ctx.resultAsNodes().get(0);
+                                    node.getOrCreate(VOCABULARY, Type.EGRAPH);
+                                    ctx.continueTask();
+                                })
                 ));
     }
 
@@ -51,7 +61,8 @@ public class VocabularyTasks {
                 .readGlobalIndex(RELATION_INDEX_ENTRY_POINT, NODE_TYPE, NODE_TYPE_VOCABULARY)
                 .then(ifEmptyThen(
                         initializeVocabulary()
-                ));
+                ))
+                .defineAsGlobalVar(VOCABULARY_VAR);
     }
 
     /**
@@ -62,8 +73,9 @@ public class VocabularyTasks {
      */
     public static Task getOrCreateTokensFromStrings(String... tokens) {
         return newTask()
-                .then(injectAsVar("myTokens", tokens))
-                .pipe(getOrCreateTokensFromVar("myTokens"));
+                .inject(tokens)
+                .map(retrieveToken())
+                .flat();
     }
 
     /**
@@ -86,80 +98,20 @@ public class VocabularyTasks {
      */
     static Task retrieveToken() {
         return newTask()
-                .defineAsVar(TOKEN_VAR)
+                .defineAsVar("token")
+                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
+                        retrieveVocabularyNode())
                 .thenDo(ctx -> {
-                    String token = ctx.resultAsStrings().get(0);
-                    String sub = (token.length() > SIZE_OF_INDEX) ? token.substring(0, SIZE_OF_INDEX) : "";
-                    ctx.setVariable(INDEXING_LETTER_VAR, sub);
-                    ctx.continueTask();
-                })
-                .pipe(retrieveVocabularyNode())
-                .defineAsVar(VOCABULARY_VAR)
-                .traverse(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NODE_NAME_TOKENINDEX, "{{" + INDEXING_LETTER_VAR + "}}")
-                .then(ifEmptyThen(
-                        createIndexing()
-                ))
-                .defineAsVar(NEW_TOKEN_INDEX_VAR)
-                .traverse(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NODE_NAME, "{{" + TOKEN_VAR + "}}")
-                .then(
-                        ifEmptyThen(
-                                createToken()
-                        )
-                );
+                    String token = (String) ctx.variable("token").get(0);
+                    Node node = (Node) ctx.variable(VOCABULARY_VAR).get(0);
+                    EGraph eGraph = (EGraph) node.get(VOCABULARY);
+                    WordIndex wordIndex = new RadixTree(eGraph);
+                    int nodeId = wordIndex.getOrCreate(token);
+                    ctx.continueWith(ctx.wrap(nodeId));
+                });
     }
 
-    /**
-     * Task to create a node in the graph that correspond to a token (String) present in the result
-     *
-     * @return Task with the corresponding node in the result
-     */
-    private static Task createToken() {
-        String NEW_TOKEN_VAR = "newToken";
-        return newTask()
 
-                .then(executeAtWorldAndTime(
-                        "0",
-                        "" + BEGINNING_OF_TIME,
-                        newTask()
-                                //Token
-                                .createNode()
-                                .timeSensitivity("-1", "0")
-                                .setAttribute(NODE_NAME, Type.STRING, "{{" + TOKEN_VAR + "}}")
-                                .setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TOKEN)
-                                .addVarToRelation(RELATION_TOKEN_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR)
-                                .defineAsVar(NEW_TOKEN_VAR)
-                                .readVar(NEW_TOKEN_INDEX_VAR)
-                                .addVarToRelation(RELATION_INDEX_TOKENINDEX_TO_TOKEN, NEW_TOKEN_VAR, NODE_NAME)
-                                .readVar(NEW_TOKEN_VAR)
-                ))
-                ;
-    }
+    public static String VOCABULARY_VAR = "vocabulary2";
 
-    /**
-     * Task to create an indexing node in the graph
-     *
-     * @return Task with the corresponding node in the result
-     */
-    private static Task createIndexing() {
-        return newTask()
-                .then(executeAtWorldAndTime(
-                        "0",
-                        "" + BEGINNING_OF_TIME,
-                        newTask()
-                                //Token
-                                .createNode()
-                                .timeSensitivity("-1", "0")
-                                .setAttribute(NODE_NAME_TOKENINDEX, Type.STRING, "{{" + INDEXING_LETTER_VAR + "}}")
-                                .setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TOKENINDEX)
-                                .defineAsVar(NEW_TOKEN_INDEX_VAR)
-                                .readVar(VOCABULARY_VAR)
-                                .addVarToRelation(RELATION_INDEX_VOCABULARY_TO_TOKENINDEX, NEW_TOKEN_INDEX_VAR, NODE_NAME_TOKENINDEX)
-                                .readVar(NEW_TOKEN_INDEX_VAR)
-                ));
-    }
-
-    private static String VOCABULARY_VAR = "vocabulary";
-    private static String INDEXING_LETTER_VAR = "firstLetter";
-    private static String NEW_TOKEN_INDEX_VAR = "newTokenIndexVar";
-    private static String TOKEN_VAR = "token";
 }

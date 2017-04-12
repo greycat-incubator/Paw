@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.io.Reader;
 
 import static greycat.Tasks.newTask;
-import static mylittleplugin.MyLittleActions.injectAsVar;
 
 /**
  * Class  wrapping tokenization method into tasks
@@ -54,7 +53,8 @@ public class TokenizationTasks {
 
     /**
      * Task adding preprocessors to a tokenizer stored in a variable
-     * @param tokenizerVar variable in which the tokenizer is stored
+     *
+     * @param tokenizerVar     variable in which the tokenizer is stored
      * @param preprocessorType type of preprocessor
      * @return Task with the current result unchanged
      */
@@ -74,8 +74,9 @@ public class TokenizationTasks {
 
     /**
      * Task setting the type of Token that the tokenizer stored in a var expect to receive
+     *
      * @param tokenizerVar variable in which the tokenizer is stored
-     * @param type of the token
+     * @param type         of the token
      * @return Task with the current result unchanged
      */
     public static Task setTypeOfToken(String tokenizerVar, String type) {
@@ -90,7 +91,8 @@ public class TokenizationTasks {
 
     /**
      * Task only working in the case of a Java Tokenizer stored in a var that indicate wether the tokenizer should keep comments
-     * @param tokenizerVar variable in which the tokenizer is stored
+     *
+     * @param tokenizerVar   variable in which the tokenizer is stored
      * @param removeComments should the comments be kept
      * @return Task with the current result unchanged
      */
@@ -109,14 +111,15 @@ public class TokenizationTasks {
 
     /**
      * Task to tokenize an array of String using a tokenizer stored in a var
+     *
      * @param tokenizerVar variable in which the tokenizer is stored
-     * @param content array of String to tokenize
+     * @param content      array of String to tokenize
      * @return Task with array of tokenized content in the current result
      */
     public static Task tokenizeFromStrings(String tokenizerVar, String... content) {
         return newTask()
-                .then(injectAsVar("mycontents", content))
-                .pipe(tokenizeFromVar(tokenizerVar, "mycontents"));
+                .inject(content)
+                .pipe(tokenize(tokenizerVar));
     }
 
     /**
@@ -136,6 +139,7 @@ public class TokenizationTasks {
                                     Reader content = (Reader) ctx.result().get(0);
                                     try {
                                         String[] result = tokenizer.tokenize(content);
+                                        content.close();
                                         ctx.continueWith(ctx.wrap(result));
                                     } catch (IOException e) {
                                         ctx.endTask(ctx.result(), e);
@@ -146,13 +150,20 @@ public class TokenizationTasks {
 
     /**
      * Task to tokenize String stored in a var using a tokenizer stored in a var
+     *
      * @param tokenizerVar variable in which the tokenizer is stored
-     * @param variable in which the string to tokenize are stored
+     * @param variable     in which the string to tokenize are stored
      * @return Task with array of tokenized content in the current result
      */
     public static Task tokenizeFromVar(String tokenizerVar, String variable) {
         return newTask()
                 .readVar(variable)
+                .pipe(tokenize(tokenizerVar));
+    }
+
+
+    private static Task tokenize(String tokenizerVar) {
+        return newTask()
                 .map(
                         newTask()
                                 .thenDo(ctx -> {

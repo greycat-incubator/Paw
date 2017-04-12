@@ -21,24 +21,24 @@ import java.util.List;
 
 public class MinimumEditDistance {
 
-    public static final long SUBSTITUTION = 1;
+    public static final int SUBSTITUTION = 1;
 
-    public static final long INSERTION = 2;
+    public static final int INSERTION = 2;
 
-    public static final long DELETION = 3;
+    public static final int DELETION = 3;
 
-    public static final long KEEP = 4;
+    public static final int KEEP = 4;
 
-    private final long[] _newer;
-    private final long[] _older;
+    private final int[] _newer;
+    private final int[] _older;
     private int[][] minEditDistanceMatrix;
-    private long[][][] backtraceMatrix;
+    private int[][][] backtraceMatrix;
 
-    public MinimumEditDistance(long[] older, long[] newer) {
+    public MinimumEditDistance(int[] older, int[] newer) {
         this._older = older;
         this._newer = newer;
         minEditDistanceMatrix = new int[newer.length + 1][older.length + 1];
-        backtraceMatrix = new long[newer.length + 1][older.length + 1][3];
+        backtraceMatrix = new int[newer.length + 1][older.length + 1][3];
         computeEditDistance();
     }
 
@@ -55,7 +55,7 @@ public class MinimumEditDistance {
                 int insert = minEditDistanceMatrix[i - 1][j] + 1;
                 int delet = minEditDistanceMatrix[i][j - 1] + 1;
                 int subsame;
-                long mod;
+                int mod;
 
                 if (_older[j - 1] == (_newer[i - 1])) {
                     subsame = minEditDistanceMatrix[i - 1][j - 1];
@@ -85,38 +85,38 @@ public class MinimumEditDistance {
         return minEditDistanceMatrix[_newer.length][_older.length];
     }
 
-    public List<long[]> path() {
+    public List<int[]> path() {
         int i = _newer.length;
         int j = _older.length;
-        List<long[]> listAction = new ArrayList<>();
+        List<int[]> listAction = new ArrayList<>();
         while (backtraceMatrix[i][j][0] != 0 || backtraceMatrix[i][j][1] != 0 || backtraceMatrix[i][j][2] != 0) {
-            long[] actions = backtraceMatrix[i][j];
+            int[] actions = backtraceMatrix[i][j];
             if (actions[2] == KEEP) {
-                listAction.add(new long[]{_older[j - 1], KEEP});
+                listAction.add(new int[]{_older[j - 1], KEEP});
                 i -= 1;
                 j -= 1;
             } else if (actions[2] == SUBSTITUTION) {
-                listAction.add(new long[]{_older[j - 1], DELETION});
-                listAction.add(new long[]{_newer[i - 1], INSERTION});
+                listAction.add(new int[]{_older[j - 1], DELETION});
+                listAction.add(new int[]{_newer[i - 1], INSERTION});
                 i -= 1;
                 j -= 1;
             } else if (actions[0] == INSERTION) {
-                listAction.add(new long[]{_newer[i - 1], INSERTION});
+                listAction.add(new int[]{_newer[i - 1], INSERTION});
                 i -= 1;
             } else {//Suppression
-                listAction.add(new long[]{_older[j - 1], DELETION});
+                listAction.add(new int[]{_older[j - 1], DELETION});
                 j -= 1;
             }
         }
         if (i != 0 && j != 0) throw new RuntimeException("error in edit distance");
         if (i != 0) {
             while (i != 0) {
-                listAction.add(new long[]{_newer[i - 1], INSERTION});
+                listAction.add(new int[]{_newer[i - 1], INSERTION});
                 i -= 1;
             }
         } else {
             while (j != 0) {
-                listAction.add(new long[]{_older[j - 1], DELETION});
+                listAction.add(new int[]{_older[j - 1], DELETION});
                 j -= 1;
             }
         }

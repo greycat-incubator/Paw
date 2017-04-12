@@ -97,7 +97,10 @@ public abstract class Tokenizer {
      */
     public String[] tokenize(String s) {
         try {
-            return tokenize(new StringReader(s));
+            Reader r = new StringReader(s);
+            String[] result = tokenize(r);
+            r.close();
+            return result;
         } catch (IOException exception) {
             exception.printStackTrace();
             return null;
@@ -150,6 +153,7 @@ public abstract class Tokenizer {
 
     /**
      * Return if the delimiter should be kept as well
+     *
      * @return
      */
     public boolean isKeepingDelimiterActivate() {
@@ -158,6 +162,7 @@ public abstract class Tokenizer {
 
     /**
      * set keepDelimiter
+     *
      * @param keepDelimiter
      */
     public void setKeepDelimiter(boolean keepDelimiter) {

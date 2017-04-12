@@ -57,10 +57,11 @@ public class EnglishTokenizer extends Tokenizer {
                 sw.append((char) ch);
                 ch = reader.read();
             }
-            if (sw.length()>0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
+            if (sw.length() > 0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
                 sw.setLength(maxWordLength);
                 String s = check(sw.toString());
-                tokens.add(applyAllTokenPreprocessorTo(s));
+                if (s != null)
+                    tokens.add(applyAllTokenPreprocessorTo(s));
             }
         }
         return tokens.toArray(new String[tokens.size()]);
@@ -93,7 +94,7 @@ public class EnglishTokenizer extends Tokenizer {
             ch = chNew;
             if (counter > maxNumOfSameConseqLetterPerTerm
                     || counterdigit > maxNumberOfDigitPerTerm)
-                return "";
+                return null;
         }
         return s;
     }

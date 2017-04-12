@@ -15,9 +15,12 @@
  */
 package paw.greycat.actions.tokenizedcontent;
 
+import greycat.DeferCounter;
 import greycat.Node;
+import greycat.struct.EGraph;
 import greycat.struct.IntArray;
 import greycat.struct.LongLongMap;
+import greycat.struct.RelationIndexed;
 import mylittleplugin.MyLittleActions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +34,7 @@ import static greycat.Tasks.newTask;
 import static org.junit.jupiter.api.Assertions.*;
 import static paw.PawConstants.*;
 import static paw.greycat.actions.Pawctions.*;
+import static paw.greycat.tasks.VocabularyTasks.VOCABULARY_VAR;
 
 @SuppressWarnings("Duplicates")
 class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
@@ -50,7 +54,7 @@ class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
 
     @Test
     void oneRelationOneText() {
-        int counter = 4;
+        int counter = 1;
         final int[] i = {0};
         newTask()
                 .travelInTime("0")
@@ -68,47 +72,38 @@ class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
                     Node node = ctx.resultAsNodes().get(0);
                     assertEquals(TYPE_TOKEN_WITHOUT_TYPE, node.get(TOKENIZE_CONTENT_TYPE));
                     assertTrue((boolean) node.get(TOKENIZE_CONTENT_DELIMITERS));
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_TOKENIZECONTENT_TO_TOKENS)
-                .thenDo(ctx -> {
-                    assertEquals(13, ctx.resultAsNodes().size());
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_INDEX_TOKEN_TO_TYPEINDEX)
-                .thenDo(ctx -> {
-                    assertEquals(13, ctx.resultAsNodes().size());
-                    for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                        assertEquals(TYPE_TOKEN_WITHOUT_TYPE, ctx.resultAsNodes().get(j).get(NODE_NAME_TYPEINDEX));
+
+                    int[] tokens = ((IntArray) node.get(TOKENIZE_CONTENT_TOKENS)).extract();
+                    assertEquals(13, tokens.length);
+
+                    Node vocab = (Node) ctx.variable(VOCABULARY_VAR).get(0);
+                    EGraph eGraph = (EGraph) vocab.get(VOCABULARY);
+                    DeferCounter deferCounter = ctx.graph().newCounter(13);
+                    for (int j = 0; j < tokens.length; j++) {
+                        RelationIndexed relationIndexed = (RelationIndexed) eGraph.node(tokens[j]).get(RELATION_INDEX_TOKEN_II);
+                        int finalJ = j;
+                        relationIndexed.find(result -> {
+                            assertEquals(1, result.length);
+                            IntArray array = (IntArray) result[0].get(INVERTEDINDEX_POSITION);
+                            int[] position = array.extract();
+                            Arrays.sort(position);
+                            assertNotEquals(-1, Arrays.binarySearch(position, finalJ));
+                            deferCounter.count();
+                        }, ctx.world(), ctx.time(), INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(node.id()));
                     }
-                    i[0]++;
-                    ctx.continueTask();
+                    deferCounter.then(() -> {
+                        i[0]++;
+                        ctx.continueTask();
+                    });
+
                 })
-                .traverse(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX)
-                .thenDo(
-                        ctx -> {
-                            assertEquals(13, ctx.resultAsNodes().size());
-                            long id = ((Node) ctx.variable("tokenizedContent").get(0)).id();
-                            for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                                IntArray array = (IntArray) ctx.resultAsNodes().get(j).get(INVERTEDINDEX_POSITION);
-                                int[] position = array.extract();
-                                Arrays.sort(position);
-                                assertNotEquals(-1, Arrays.binarySearch(position, j));
-                                assertEquals(id, ctx.resultAsNodes().get(j).get(INVERTEDINDEX_TOKENIZEDCONTENT));
-                            }
-                            i[0]++;
-                            ctx.continueTask();
-                        }
-                )
                 .execute(graph, null);
         assertEquals(counter, i[0]);
     }
 
     @Test
     void TwoRelationTwoText() {
-        int counter = 4;
+        int counter = 1;
         final int[] i = {0};
         String text2 = "an orange was riding a skateboard";
         newTask()
@@ -129,48 +124,37 @@ class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
                     Node node = ctx.resultAsNodes().get(0);
                     assertEquals(TYPE_TOKEN_WITHOUT_TYPE, node.get(TOKENIZE_CONTENT_TYPE));
                     assertTrue((boolean) node.get(TOKENIZE_CONTENT_DELIMITERS));
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_TOKENIZECONTENT_TO_TOKENS)
-                .thenDo(ctx -> {
-                    assertEquals(11, ctx.resultAsNodes().size());
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_INDEX_TOKEN_TO_TYPEINDEX)
-                .thenDo(ctx -> {
-                    assertEquals(11, ctx.resultAsNodes().size());
-                    for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                        assertEquals(TYPE_TOKEN_WITHOUT_TYPE, ctx.resultAsNodes().get(j).get(NODE_NAME_TYPEINDEX));
+
+                    int[] tokens = ((IntArray) node.get(TOKENIZE_CONTENT_TOKENS)).extract();
+                    assertEquals(11, tokens.length);
+
+                    Node vocab = (Node) ctx.variable(VOCABULARY_VAR).get(0);
+                    EGraph eGraph = (EGraph) vocab.get(VOCABULARY);
+                    DeferCounter deferCounter = ctx.graph().newCounter(11);
+                    for (int j = 0; j < tokens.length; j++) {
+                        RelationIndexed relationIndexed = (RelationIndexed) eGraph.node(tokens[j]).get(RELATION_INDEX_TOKEN_II);
+                        int finalJ = j;
+                        relationIndexed.find(result -> {
+                            assertEquals(1, result.length);
+                            IntArray array = (IntArray) result[0].get(INVERTEDINDEX_POSITION);
+                            int[] position = array.extract();
+                            Arrays.sort(position);
+                            assertNotEquals(-1, Arrays.binarySearch(position, finalJ));
+                            deferCounter.count();
+                        }, ctx.world(), ctx.time(), INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(node.id()));
                     }
-                    i[0]++;
-                    ctx.setVariable("id", ((Node) ctx.variable("tokenizedContent").get(0)).id());
-                    ctx.continueTask();
+                    deferCounter.then(() -> {
+                        i[0]++;
+                        ctx.continueTask();
+                    });
                 })
-                .traverse(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX, INVERTEDINDEX_TOKENIZEDCONTENT, "{{id}}")
-                .thenDo(
-                        ctx -> {
-                            assertEquals(11, ctx.resultAsNodes().size());
-                            long id = ((Node) ctx.variable("tokenizedContent").get(0)).id();
-                            for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                                IntArray array = (IntArray) ctx.resultAsNodes().get(j).get(INVERTEDINDEX_POSITION);
-                                int[] position = array.extract();
-                                Arrays.sort(position);
-                                assertNotEquals(-1, Arrays.binarySearch(position, j));
-                                assertEquals(id, ctx.resultAsNodes().get(j).get(INVERTEDINDEX_TOKENIZEDCONTENT));
-                            }
-                            i[0]++;
-                            ctx.continueTask();
-                        }
-                )
                 .execute(graph, null);
         assertEquals(counter, i[0]);
     }
 
     @Test
     void oneRelationUpdated() {
-        int counter = 4;
+        int counter = 1;
         final int[] i = {0};
         newTask()
                 .travelInTime("0")
@@ -194,40 +178,30 @@ class ActionUpdateOrCreateTokenizeRelationFromVarTest extends ActionTest {
                     assertEquals(TYPE_TOKEN_WITHOUT_TYPE, node.get(TOKENIZE_CONTENT_TYPE));
                     assertTrue((boolean) node.get(TOKENIZE_CONTENT_DELIMITERS));
                     assertNotEquals(0, ((LongLongMap) node.get(TOKENIZE_CONTENT_PATCH)).size());
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_TOKENIZECONTENT_TO_TOKENS)
-                .thenDo(ctx -> {
-                    assertEquals(17, ctx.resultAsNodes().size());
-                    i[0]++;
-                    ctx.continueTask();
-                })
-                .traverse(RELATION_INDEX_TOKEN_TO_TYPEINDEX)
-                .thenDo(ctx -> {
-                    assertEquals(17, ctx.resultAsNodes().size());
-                    for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                        assertEquals(TYPE_TOKEN_WITHOUT_TYPE, ctx.resultAsNodes().get(j).get(NODE_NAME_TYPEINDEX));
+
+                    int[] tokens = ((IntArray) node.get(TOKENIZE_CONTENT_TOKENS)).extract();
+                    assertEquals(17, tokens.length);
+
+                    Node vocab = (Node) ctx.variable(VOCABULARY_VAR).get(0);
+                    EGraph eGraph = (EGraph) vocab.get(VOCABULARY);
+                    DeferCounter deferCounter = ctx.graph().newCounter(17);
+                    for (int j = 0; j < tokens.length; j++) {
+                        RelationIndexed relationIndexed = (RelationIndexed) eGraph.node(tokens[j]).get(RELATION_INDEX_TOKEN_II);
+                        int finalJ = j;
+                        relationIndexed.find(result -> {
+                            assertEquals(1, result.length);
+                            IntArray array = (IntArray) result[0].get(INVERTEDINDEX_POSITION);
+                            int[] position = array.extract();
+                            Arrays.sort(position);
+                            assertNotEquals(-1, Arrays.binarySearch(position, finalJ));
+                            deferCounter.count();
+                        }, ctx.world(), ctx.time(), INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(node.id()));
                     }
-                    i[0]++;
-                    ctx.continueTask();
+                    deferCounter.then(() -> {
+                        i[0]++;
+                        ctx.continueTask();
+                    });
                 })
-                .traverse(RELATION_INDEX_TYPEINDEX_TO_INVERTEDINDEX)
-                .thenDo(
-                        ctx -> {
-                            assertEquals(17, ctx.resultAsNodes().size());
-                            long id = ((Node) ctx.variable("tokenizedContent").get(0)).id();
-                            for (int j = 0; j < ctx.resultAsNodes().size(); j++) {
-                                IntArray array = (IntArray) ctx.resultAsNodes().get(j).get(INVERTEDINDEX_POSITION);
-                                int[] position = array.extract();
-                                Arrays.sort(position);
-                                assertNotEquals(-1, Arrays.binarySearch(position, j));
-                                assertEquals(id, ctx.resultAsNodes().get(j).get(INVERTEDINDEX_TOKENIZEDCONTENT));
-                            }
-                            i[0]++;
-                            ctx.continueTask();
-                        }
-                )
                 .execute(graph, null);
         assertEquals(counter, i[0]);
     }
