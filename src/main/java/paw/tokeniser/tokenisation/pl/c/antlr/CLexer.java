@@ -1,4 +1,3 @@
-// Generated from paw/tokeniser/tokenisation/pl/c/C.g4 by ANTLR 4.6
 package paw.tokeniser.tokenisation.pl.c.antlr;
 
 

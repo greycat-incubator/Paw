@@ -1,4 +1,3 @@
-// Generated from paw/tokeniser/tokenisation/pl/cpp/CPP14.g4 by ANTLR 4.6
 package paw.tokeniser.tokenisation.pl.cpp.antlr;
 
 import org.antlr.v4.runtime.*;
