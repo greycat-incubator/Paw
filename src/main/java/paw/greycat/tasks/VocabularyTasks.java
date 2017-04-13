@@ -15,10 +15,10 @@
  */
 package paw.greycat.tasks;
 
-import greycat.Node;
-import greycat.Task;
-import greycat.Type;
+import greycat.*;
 import greycat.struct.EGraph;
+import greycat.struct.LongLongMap;
+import greycat.utility.HashHelper;
 import paw.greycat.indexing.WordIndex;
 import paw.greycat.indexing.radix.RadixTree;
 
@@ -46,6 +46,7 @@ public class VocabularyTasks {
                                 .thenDo(ctx -> {
                                     Node node = ctx.resultAsNodes().get(0);
                                     node.getOrCreate(VOCABULARY, Type.EGRAPH);
+                                    node.getOrCreate(VOCABULARY_MAP, Type.LONG_TO_LONG_MAP);
                                     ctx.continueTask();
                                 })
                 ));
@@ -73,8 +74,10 @@ public class VocabularyTasks {
      */
     public static Task getOrCreateTokensFromStrings(String... tokens) {
         return newTask()
+                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
+                        retrieveVocabularyNode())
                 .inject(tokens)
-                .map(retrieveToken())
+                .pipe(retrieveToken())
                 .flat();
     }
 
@@ -86,8 +89,10 @@ public class VocabularyTasks {
      */
     public static Task getOrCreateTokensFromVar(String variable) {
         return newTask()
+                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
+                        retrieveVocabularyNode())
                 .readVar(variable)
-                .map(retrieveToken())
+                .pipe(retrieveToken())
                 .flat();
     }
 
@@ -98,20 +103,29 @@ public class VocabularyTasks {
      */
     static Task retrieveToken() {
         return newTask()
-                .defineAsVar("token")
-                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
-                        retrieveVocabularyNode())
                 .thenDo(ctx -> {
-                    String token = (String) ctx.variable("token").get(0);
+                    TaskResult<String> tokens = ctx.resultAsStrings();
                     Node node = (Node) ctx.variable(VOCABULARY_VAR).get(0);
+                    LongLongMap longLongMap = node.getLongLongMap(VOCABULARY_MAP);
                     EGraph eGraph = (EGraph) node.get(VOCABULARY);
                     WordIndex wordIndex = new RadixTree(eGraph);
-                    int nodeId = wordIndex.getOrCreate(token);
-                    ctx.continueWith(ctx.wrap(nodeId));
+                    int[] eNodesId = new int[tokens.size()];
+                    for (int i = 0; i < tokens.size(); i++) {
+                        int hash = HashHelper.hash(tokens.get(i));
+                        long enode = longLongMap.get(hash);
+                        if (enode != Constants.NULL_LONG) {
+                            eNodesId[i] = (int) enode;
+                        } else {
+                            int nodeId = wordIndex.getOrCreate(tokens.get(i));
+                            longLongMap.put(hash, nodeId);
+                            eNodesId[i] = nodeId;
+                        }
+                    }
+                    ctx.continueWith(ctx.wrap(eNodesId));
                 });
     }
 
 
     public static String VOCABULARY_VAR = "vocabulary2";
-
+    public static String VOCABULARY_MAP = "vocabularymap";
 }

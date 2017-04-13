@@ -29,8 +29,7 @@ import static mylittleplugin.MyLittleActions.ifEmptyThenElse;
 import static paw.PawConstants.*;
 import static paw.greycat.tasks.TokenizationTasks.tokenizeFromStrings;
 import static paw.greycat.tasks.TokenizationTasks.tokenizeFromVar;
-import static paw.greycat.tasks.VocabularyTasks.VOCABULARY_VAR;
-import static paw.greycat.tasks.VocabularyTasks.retrieveToken;
+import static paw.greycat.tasks.VocabularyTasks.*;
 
 @SuppressWarnings("Duplicates")
 public class TokenizedRelationTasks {
@@ -47,6 +46,8 @@ public class TokenizedRelationTasks {
                 .inject(relationName)
                 .defineAsVar("relationVar")
                 .pipeTo(tokenizeFromStrings(tokenizerVar, content), "tokenizedContentsVar")
+                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
+                        retrieveVocabularyNode())
                 .readVar(nodesVar)
                 .forEach(
                         newTask()
@@ -54,8 +55,7 @@ public class TokenizedRelationTasks {
                                 .readVar("tokenizedContentsVar")
                                 .forEach(
                                         newTask()
-                                                .map(retrieveToken())
-                                                .flat()
+                                                .pipe(retrieveToken())
                                                 .defineAsVar("tokenizedContentVar")
                                                 .pipe(uocTokenizeRelation(tokenizerVar))
                                 )
@@ -98,8 +98,7 @@ public class TokenizedRelationTasks {
                 .readVar(tokenizedContents)
                 .forEach(
                         newTask()
-                                .map(retrieveToken())
-                                .flat()
+                                .pipe(retrieveToken())
                                 .defineAsVar("tokenizedContentVar")
                                 .thenDo(
                                         ctx -> {
@@ -120,14 +119,7 @@ public class TokenizedRelationTasks {
     private static Task uocTokenizeRelation(String tokenizerVar) {
         return newTask()
                 .readVar("nodeVar")
-                .thenDo(ctx -> {
-                    Node node = ctx.resultAsNodes().get(0);
-                    if (node.time() != ctx.time()) {
-                        node.travelInTime(ctx.time(), result -> ctx.continueWith(ctx.wrap(result.rephase())));
-                    } else {
-                        ctx.continueTask();
-                    }
-                })
+                .travelInTime("{{time}}")
                 .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, NODE_NAME, "{{relationVar}}")
                 .then(ifEmptyThenElse(
                         createTokenRelation(tokenizerVar),
@@ -258,77 +250,52 @@ public class TokenizedRelationTasks {
      */
     private static Task createTokenRelation(String tokenizerVar) {
         return newTask()
-                .readVar(tokenizerVar)
-                .thenDo(
-                        ctx -> {
-                            Tokenizer tokenizer = (Tokenizer) ctx.result().get(0);
-                            ctx.setVariable("type", tokenizer.getTypeOfToken());
-                            ctx.setVariable("delimiters", tokenizer.isKeepingDelimiterActivate());
-                            ctx.setVariable("tokenizerType", tokenizer.getType());
-                            ctx.continueTask();
-                        })
-
                 .createNode()
-                .setAttribute(NODE_NAME, Type.STRING, "{{relationVar}}")
-                .setAttribute(NODE_TYPE, Type.INT, NODE_TYPE_TOKENIZE_CONTENT)
-                .setAttribute(TOKENIZE_CONTENT_TYPE, Type.STRING, "{{type}}")
-                .setAttribute(TOKENIZE_CONTENT_DELIMITERS, Type.BOOL, "{{delimiters}}")
-                .setAttribute(TOKENIZE_CONTENT_TOKENIZERTYPE, Type.INT, "{{tokenizerType}}")
-
                 .thenDo(ctx -> {
-                    Node node = ctx.resultAsNodes().get(0);
-                    ctx.setVariable("relationNodeId", node.id());
-                    node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
-                    node.getOrCreate(TOKENIZE_CONTENT_TOKENS, Type.INT_ARRAY);
-                    ctx.continueTask();
-                })
+                            Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                            Node node = ctx.resultAsNodes().get(0);
+                            node.set(NODE_NAME, Type.STRING, ctx.variable("relationVar").get(0));
+                            node.set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_TOKENIZE_CONTENT));
+                            node.set(TOKENIZE_CONTENT_TYPE, Type.STRING, tokenizer.getTypeOfToken());
+                            node.set(TOKENIZE_CONTENT_DELIMITERS, Type.BOOL, tokenizer.isKeepingDelimiterActivate());
+                            node.set(TOKENIZE_CONTENT_TOKENIZERTYPE, Type.INT, tokenizer.getType());
+                            node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
+                            IntArray tokens = (IntArray) node.getOrCreate(TOKENIZE_CONTENT_TOKENS, Type.INT_ARRAY);
+                            node.addToRelation(RELATION_TOKENIZECONTENT_TO_NODE, (Node) ctx.variable("nodeVar").get(0));
+                            ((Node) ctx.variable("nodeVar").get(0)).addToRelation(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, node, NODE_NAME);
 
-                .addVarToRelation(RELATION_TOKENIZECONTENT_TO_NODE, "nodeVar")
-                .defineAsVar("relationNode")
 
+                            Object[] tokenizedContentVar = ctx.variable("tokenizedContentVar").asArray();
+                            int[] words = Arrays.stream(tokenizedContentVar).mapToInt(obj -> (int) obj).toArray();
+                            //EGraph eGraph = (EGraph) ((Node) ctx.variable(VOCABULARY_VAR).get(0)).get(VOCABULARY);
 
-                .readVar("nodeVar")
-                .addVarToRelation(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, "relationNode", NODE_NAME)
+                            tokens.initWith(words);
 
-                .readVar("tokenizedContentVar")
-                .forEach(
-                        newTask()
-                                .thenDo(ctx -> {
-                                    Node node = (Node) ctx.variable(VOCABULARY_VAR).get(0);
-                                    EGraph eGraph = (EGraph) node.get(VOCABULARY);
-                                    ENode enode = eGraph.node(ctx.intResult());
-
-                                    Node tokenizedContent = (Node) ctx.variable("relationNode").get(0);
-                                    IntArray tokens = (IntArray) tokenizedContent.get(TOKENIZE_CONTENT_TOKENS);
-                                    tokens.addElement(enode.id());
-
-                                    RelationIndexed relationIndexed = (RelationIndexed) enode.getOrCreate(RELATION_INDEX_TOKEN_II, Type.RELATION_INDEXED);
-                                    long[] nodeExisting = relationIndexed.select(INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(ctx.longVar("relationNodeId")));
-                                    final Node[] ii = new Node[1];
-
-                                    DeferCounter deferCounter = ctx.graph().newCounter(1);
-
-                                    if (nodeExisting.length == 0) {
-                                        ii[0] = ctx.graph().newNode(ctx.world(), ctx.time());
-                                        ii[0].set(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, ctx.longVar("relationNodeId"));
-                                        ii[0].set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_INVERTED_INDEX));
-                                        ii[0].set(INVERTEDINDEX_TOKEN, Type.INT, enode.id());
-                                        ii[0].set(INVERTEDINDEX_TYPE, Type.STRING, ctx.variable("type").get(0));
-                                        relationIndexed.add(ii[0], INVERTEDINDEX_TOKENIZEDCONTENT);
-                                        deferCounter.count();
-                                    } else {
-                                        ctx.graph().lookup(ctx.world(), ctx.time(), nodeExisting[0], result -> {
-                                            ii[0] = result;
-                                            deferCounter.count();
-                                        });
-                                    }
-                                    deferCounter.then(() -> {
-                                        IntArray position = (IntArray) ii[0].getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
-                                        position.addElement(ctx.intVar("i"));
-                                        ii[0].free();
-                                        ctx.continueTask();
-                                    });
-                                })
+                            /**HashMap<Integer, List<Integer>> mapOfWords = new HashMap();
+                             for (int i = 0; i < words.length; i++) {
+                             if (mapOfWords.containsKey(words[i])) {
+                             mapOfWords.get(words[i]).add(i);
+                             } else {
+                             List<Integer> position = new ArrayList<>();
+                             position.add(i);
+                             mapOfWords.put(words[i], position);
+                             }
+                             }
+                             for (Map.Entry<Integer, List<Integer>> entry : mapOfWords.entrySet()) {
+                             ENode enode = eGraph.node(entry.getKey());
+                             RelationIndexed relationIndexed = (RelationIndexed) enode.getOrCreate(RELATION_INDEX_TOKEN_II, Type.RELATION_INDEXED);
+                             Node newInvertedIndex = ctx.graph().newNode(ctx.world(), ctx.time());
+                             newInvertedIndex.set(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, node.id());
+                             newInvertedIndex.set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_INVERTED_INDEX));
+                             newInvertedIndex.set(INVERTEDINDEX_TOKEN, Type.INT, enode.id());
+                             newInvertedIndex.set(INVERTEDINDEX_TYPE, Type.STRING, tokenizer.getTypeOfToken());
+                             relationIndexed.add(newInvertedIndex, INVERTEDINDEX_TOKENIZEDCONTENT);
+                             IntArray position = (IntArray) newInvertedIndex.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
+                             position.initWith(entry.getValue().stream().mapToInt(obj -> obj).toArray());
+                             newInvertedIndex.free();
+                             }*/
+                            ctx.continueTask();
+                        }
                 );
 
     }
