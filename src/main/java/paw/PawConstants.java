@@ -40,14 +40,19 @@ public class PawConstants {
 
 
     public final static String TOKENIZE_CONTENT_PLUGIN = "plugin";
-    public final static String TOKENIZE_CONTENT_PATCH = "patch";
-    public final static String TOKENIZE_CONTENT_DELIMITERS = "delimiters";
     public final static String TOKENIZE_CONTENT_TYPE = "typeOfToken";
     public final static String TOKENIZE_CONTENT_TOKENIZERTYPE = "typeOfTokenizer";
-    public final static String TOKENIZE_CONTENT_TOKENS = "tokens";
+    public final static String TOKENIZE_CONTENT_INDEXEDTOKENS = "itokens";
+    public final static String TOKENIZE_CONTENT_DELIMITERS = "delimiters";
+    public final static String TOKENIZE_CONTENT_OUTCAST = "outcasts";
+    public final static String TOKENIZE_CONTENT_INTEGER = "integers";
+    public final static String TOKENIZE_CONTENT_SIZE = "size";
+
 
     public final static String INVERTEDINDEX_TOKENIZEDCONTENT = "tokenizedContent";
     public final static String INVERTEDINDEX_POSITION = "position";
     public final static String INVERTEDINDEX_TOKEN = "token";
     public final static String INVERTEDINDEX_TYPE = "typeOfToken";
+
+    public final static int THRESHOLD = 3;
 }

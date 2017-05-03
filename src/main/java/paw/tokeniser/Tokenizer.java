@@ -87,7 +87,7 @@ public abstract class Tokenizer {
      * @return an array of token on which all preprocessor registered have been applied
      * @throws IOException in case of reader exception
      */
-    public abstract String[] tokenize(Reader reader) throws IOException;
+    public abstract TokenizedString tokenize(Reader reader) throws IOException;
 
     /**
      * Method to tokenize a string
@@ -95,10 +95,10 @@ public abstract class Tokenizer {
      * @param s string to tokenize
      * @return an array of token on which all preprocessor registered have been applied
      */
-    public String[] tokenize(String s) {
+    public TokenizedString tokenize(String s) {
         try {
             Reader r = new StringReader(s);
-            String[] result = tokenize(r);
+            TokenizedString result = tokenize(r);
             r.close();
             return result;
         } catch (IOException exception) {
@@ -148,27 +148,15 @@ public abstract class Tokenizer {
         return s;
     }
 
+    private boolean checkContent = false;
 
-    private boolean keepDelimiter = false;
-
-    /**
-     * Return if the delimiter should be kept as well
-     *
-     * @return
-     */
-    public boolean isKeepingDelimiterActivate() {
-        return keepDelimiter;
+    public boolean isCheckContent() {
+        return checkContent;
     }
 
-    /**
-     * set keepDelimiter
-     *
-     * @param keepDelimiter
-     */
-    public void setKeepDelimiter(boolean keepDelimiter) {
-        this.keepDelimiter = keepDelimiter;
+    public void setCheckContent(boolean checkContent) {
+        this.checkContent = checkContent;
     }
-
 
     public abstract byte getType();
 }

@@ -18,37 +18,58 @@ package paw.tokeniser.tokenisation.pl.cpp;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
 import paw.tokeniser.tokenisation.pl.cpp.antlr.CPP14Lexer;
+import paw.utils.Utils;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A CPP tokenizer
  * relying on antlr CPP14 grammar
- *  if unpreprocessed C file use this class
+ * if unpreprocessed C file use this class
  *
- *  Warning comments are removed
+ * Warning comments are removed
  */
 public class CPPTokenizer extends Tokenizer {
 
     public final static String ID = "CPP TOKENIZER";
 
     @Override
-    public String[] tokenize(Reader reader) throws IOException {
+    public TokenizedString tokenize(Reader reader) throws IOException {
+        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, Integer> delimiter = new HashMap<>();
+        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, String> outcast = new HashMap<>();
         ANTLRInputStream inputStream = new ANTLRInputStream(reader);
         CPP14Lexer lexer = new CPP14Lexer(inputStream);
         CommonTokenStream commonTokenStream = new CommonTokenStream(lexer);
         commonTokenStream.fill();
         List<Token> list = commonTokenStream.getTokens();
-        String[] result = new String[list.size()];
         for (int i = 0; i < list.size(); i++) {
-            result[i] = applyAllTokenPreprocessorTo(list.get(i).getText());
+            String res = list.get(i).getText();
+            if (Utils.isNumericArray(res)) {
+                try {
+                    int integer = Integer.parseInt(res);
+                    integerPosition.put(i, integer);
+                } catch (NumberFormatException e) {
+                    outcast.put(i, res);
+                }
+            } else {
+                if (res.length() == 1 && !Character.isAlphabetic(res.codePointAt(0))) {
+                    delimiter.put(i, res.codePointAt(0));
+                } else {
+                    tokens.put(i, applyAllTokenPreprocessorTo(res));
+                }
+            }
         }
-        return result;
+        return new TokenizedString(tokens, integerPosition, delimiter, outcast, list.size());
     }
 
     @Override

@@ -19,13 +19,16 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.JavaToken;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.Utils;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.javaparser.ParseStart.COMPILATION_UNIT;
 import static com.github.javaparser.Providers.provider;
@@ -39,43 +42,42 @@ import static com.github.javaparser.Providers.provider;
 public class JavaTokenizer extends Tokenizer {
     public final static String ID = "JAVA TOKENIZER";
 
-    private boolean removeComments = false;
-
     @Override
-    public String[] tokenize(Reader reader) throws IOException {
+    public TokenizedString tokenize(Reader reader) throws IOException {
+        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, Integer> delimiter = new HashMap<>();
+        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, String> outcast = new HashMap<>();
 
         JavaParser jp = new JavaParser(JavaParser.getStaticConfiguration());
         ParseResult<CompilationUnit> result = jp.parse(COMPILATION_UNIT, provider(reader));
         if (result.isSuccessful()) {
             List<JavaToken> l = result.getTokens().get();
-            List<String> tokens = new ArrayList<>(l.size());
             for (int i = 0; i < l.size(); i++) {
                 JavaToken jt = l.get(i);
-
-                String s = applyAllTokenPreprocessorTo(jt.getText());
-                if (removeComments && (s.contains("/**") || s.contains("//")))
-                    s = "";
-                if (!isKeepingDelimiterActivate()) {
-                    if (!s.contains("\n"))
-                        s = s.trim();
-                    if (!s.isEmpty()) {
-                        tokens.add(s);
-                    }
+                String res = jt.getText();
+                if (res.contains("/**") || res.contains("//")) {
+                    outcast.put(i, res);
                 } else {
-                    tokens.add(s);
+                    if (Utils.isNumericArray(res)) {
+                        try {
+                            int integer = Integer.parseInt(res);
+                            integerPosition.put(i, integer);
+                        } catch (NumberFormatException e) {
+                            outcast.put(i, res);
+                        }
+                    } else {
+                        if (res.length() == 1 && !Character.isAlphabetic(res.codePointAt(0))) {
+                            delimiter.put(i, res.codePointAt(0));
+                        } else {
+                            tokens.put(i, applyAllTokenPreprocessorTo(res));
+                        }
+                    }
                 }
             }
-            return tokens.toArray(new String[tokens.size()]);
+            return new TokenizedString(tokens, integerPosition, delimiter, outcast, l.size());
         }
-        return new String[0];
-    }
-
-    public boolean isRemoveComments() {
-        return removeComments;
-    }
-
-    public void setRemoveComments(boolean removeComments) {
-        this.removeComments = removeComments;
+        return null;
     }
 
     @Override

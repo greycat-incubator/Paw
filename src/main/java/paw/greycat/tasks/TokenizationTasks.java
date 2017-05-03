@@ -17,10 +17,10 @@ package paw.greycat.tasks;
 
 import greycat.Task;
 import paw.tokeniser.TokenPreprocessor;
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.preprocessing.PreprocessorFactory;
 import paw.tokeniser.tokenisation.TokenizerFactory;
-import paw.tokeniser.tokenisation.pl.java.JavaTokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -41,10 +41,9 @@ public class TokenizationTasks {
      * @param keepDelimiter should the delimiter appear in the tokenized contents
      * @return Task with the current result unchanged
      */
-    public static Task createTokenizer(String tokenizerVar, byte tokenizerType, boolean keepDelimiter) {
+    public static Task createTokenizer(String tokenizerVar, byte tokenizerType) {
         Tokenizer tokenizer = TokenizerFactory.getTokenizer(tokenizerType);
         assert tokenizer != null;
-        tokenizer.setKeepDelimiter(keepDelimiter);
         return newTask().thenDo(ctx -> {
             ctx.setGlobalVariable(tokenizerVar, tokenizer);
             ctx.continueTask();
@@ -90,26 +89,6 @@ public class TokenizationTasks {
     }
 
     /**
-     * Task only working in the case of a Java Tokenizer stored in a var that indicate wether the tokenizer should keep comments
-     *
-     * @param tokenizerVar   variable in which the tokenizer is stored
-     * @param removeComments should the comments be kept
-     * @return Task with the current result unchanged
-     */
-    public static Task setRemoveComment(String tokenizerVar, boolean removeComments) {
-        return newTask()
-                .thenDo(ctx -> {
-                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                    if (tokenizer instanceof JavaTokenizer) {
-                        ((JavaTokenizer) tokenizer).setRemoveComments(removeComments);
-                        ctx.setVariable(tokenizerVar, tokenizer);
-                    }
-                    ctx.continueTask();
-
-                });
-    }
-
-    /**
      * Task to tokenize an array of String using a tokenizer stored in a var
      *
      * @param tokenizerVar variable in which the tokenizer is stored
@@ -118,8 +97,14 @@ public class TokenizationTasks {
      */
     public static Task tokenizeFromStrings(String tokenizerVar, String... content) {
         return newTask()
-                .inject(content)
-                .pipe(tokenize(tokenizerVar));
+                .thenDo(ctx -> {
+                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                    TokenizedString[] tokenizedStrings = new TokenizedString[content.length];
+                    for (int i = 0; i < content.length; i++) {
+                        tokenizedStrings[i] = tokenizer.tokenize(content[i]);
+                    }
+                    ctx.continueWith(ctx.wrap(tokenizedStrings));
+                });
     }
 
     /**
@@ -131,48 +116,33 @@ public class TokenizationTasks {
      */
     public static Task tokenizeFromReader(String tokenizerVar, Reader... readers) {
         return newTask()
-                .inject(readers)
-                .map(
-                        newTask()
-                                .thenDo(ctx -> {
-                                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                                    Reader content = (Reader) ctx.result().get(0);
-                                    try {
-                                        String[] result = tokenizer.tokenize(content);
-                                        content.close();
-                                        ctx.continueWith(ctx.wrap(result));
-                                    } catch (IOException e) {
-                                        ctx.endTask(ctx.result(), e);
-                                    }
-                                })
-                );
+                .thenDo(ctx -> {
+                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                    TokenizedString[] tokenizedStrings = new TokenizedString[readers.length];
+                    for (int i = 0; i < readers.length; i++) {
+                        try {
+                            tokenizedStrings[i] = tokenizer.tokenize(readers[i]);
+                            readers[i].close();
+                        } catch (IOException e) {
+                            ctx.endTask(ctx.result(), e);
+                        }
+                    }
+                    ctx.continueWith(ctx.wrap(tokenizedStrings));
+                });
     }
 
-    /**
-     * Task to tokenize String stored in a var using a tokenizer stored in a var
-     *
-     * @param tokenizerVar variable in which the tokenizer is stored
-     * @param variable     in which the string to tokenize are stored
-     * @return Task with array of tokenized content in the current result
-     */
-    public static Task tokenizeFromVar(String tokenizerVar, String variable) {
+
+    /**static Task tokenize(String tokenizerVar) {
         return newTask()
-                .readVar(variable)
-                .pipe(tokenize(tokenizerVar));
-    }
-
-
-    private static Task tokenize(String tokenizerVar) {
-        return newTask()
-                .map(
-                        newTask()
-                                .thenDo(ctx -> {
-                                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                                    assert (ctx.result().get(0) instanceof String);
-                                    String content = ctx.resultAsStrings().get(0);
-                                    ctx.continueWith(ctx.wrap(tokenizer.tokenize(content)));
-                                })
-                );
-    }
+                .thenDo(ctx -> {
+                    TaskResult<String> toTokenize = ctx.resultAsStrings();
+                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                    TokenizedString[] tokenizedStrings = new TokenizedString[toTokenize.size()];
+                    for (int i = 0; i < toTokenize.size(); i++) {
+                        tokenizedStrings[i] = tokenizer.tokenize(toTokenize.get(i));
+                    }
+                    ctx.continueWith(ctx.wrap(tokenizedStrings));
+                });
+    }*/
 
 }

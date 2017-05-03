@@ -15,21 +15,23 @@
  */
 package paw.greycat.tasks;
 
-import greycat.*;
-import greycat.struct.*;
+import greycat.Node;
+import greycat.Task;
+import greycat.TaskContext;
+import greycat.Type;
+import greycat.struct.IntIntMap;
+import greycat.struct.IntStringMap;
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
-import paw.utils.MinimumEditDistance;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static greycat.Tasks.newTask;
-import static mylittleplugin.MyLittleActions.checkForFuture;
 import static mylittleplugin.MyLittleActions.ifEmptyThenElse;
 import static paw.PawConstants.*;
-import static paw.greycat.tasks.TokenizationTasks.tokenizeFromStrings;
-import static paw.greycat.tasks.TokenizationTasks.tokenizeFromVar;
-import static paw.greycat.tasks.VocabularyTasks.*;
+import static paw.greycat.tasks.VocabularyTasks.VOCABULARY_MAP;
+import static paw.greycat.tasks.VocabularyTasks.retrieveVocabularyNode;
 
 @SuppressWarnings("Duplicates")
 public class TokenizedRelationTasks {
@@ -43,71 +45,35 @@ public class TokenizedRelationTasks {
      */
     public static Task updateOrCreateTokenizeRelationFromString(String tokenizerVar, String nodesVar, String content, String relationName) {
         return newTask()
-                .inject(relationName)
-                .defineAsVar("relationVar")
-                .pipeTo(tokenizeFromStrings(tokenizerVar, content), "tokenizedContentsVar")
-                .ifThen(ctx -> ctx.variable(VOCABULARY_VAR) == null,
+                // retrive vocabulary Node
+                .ifThen(ctx -> ctx.variable(VOCABULARY_MAP) == null,
                         retrieveVocabularyNode())
+                .thenDo(ctx -> {
+                    Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                    TokenizedString tokenizedString = tokenizer.tokenize(content);
+                    Map<Integer, String> tokenPosition = tokenizedString.get_tokensPosition();
+                    if (tokenPosition == null) {
+                        ctx.setVariable("positionIndexedTokens", new int[0]);
+                        ctx.setVariable("indexedTokens", new int[0]);
+                    } else {
+                        Set<Map.Entry<Integer, String>> setToIndex = tokenPosition.entrySet();
+                        int[] positionIndexedTokens = new int[setToIndex.size()];
+                        String[] toIndex = setToIndex.stream().map(Map.Entry::getValue).toArray(String[]::new);
+                        int[] indexedTokens = VocabularyTasks.retriveNodes(ctx, toIndex);
+                        ctx.setVariable("positionIndexedTokens", positionIndexedTokens);
+                        ctx.setVariable("indexedTokens", indexedTokens);
+                    }
+                    ctx.setVariable("sizeTC", tokenizedString.get_size());
+                    ctx.setVariable("outcast", tokenizedString.get_outcastPosition());
+                    ctx.setVariable("delimitersPosition", tokenizedString.get_delimitersPosition());
+                    ctx.setVariable("integerPosition", tokenizedString.get_numberPosition());
+                    ctx.continueTask();
+                })
                 .readVar(nodesVar)
                 .forEach(
                         newTask()
                                 .defineAsVar("nodeVar")
-                                .readVar("tokenizedContentsVar")
-                                .forEach(
-                                        newTask()
-                                                .pipe(retrieveToken())
-                                                .defineAsVar("tokenizedContentVar")
-                                                .pipe(uocTokenizeRelation(tokenizerVar))
-                                )
-                );
-
-    }
-
-    /**
-     * @param tokenizerVar
-     * @param nodesVar
-     * @param contentVar
-     * @param relationName
-     * @return
-     */
-    public static Task updateOrCreateTokenizeRelationFromVar(String tokenizerVar, String nodesVar, String contentVar, String... relationName) {
-        return newTask()
-                .readVar(contentVar)
-                .ifThenElse(ctx -> ctx.result().size() == relationName.length,
-                        newTask()
-                                .pipeTo(tokenizeFromVar(tokenizerVar, contentVar), "tokenizedContentsVar")
-                                .readVar(nodesVar)
-                                .forEach(
-                                        updateOrCreateTokenizeRelationOfNode(tokenizerVar, "tokenizedContentsVar", relationName)
-                                )
-                        ,
-                        newTask()
-                                .thenDo(ctx -> ctx.endTask(ctx.result(), new IllegalArgumentException("number of content to Tokenize and relation Name are not similar")))
-                );
-    }
-
-    /**
-     * @param tokenizerVar
-     * @param tokenizedContents
-     * @param relationName
-     * @return
-     */
-    private static Task updateOrCreateTokenizeRelationOfNode(String tokenizerVar, String tokenizedContents, String[] relationName) {
-        return newTask()
-                .defineAsVar("nodeVar")
-                .readVar(tokenizedContents)
-                .forEach(
-                        newTask()
-                                .pipe(retrieveToken())
-                                .defineAsVar("tokenizedContentVar")
-                                .thenDo(
-                                        ctx -> {
-                                            int increment = ctx.intVar("i");
-                                            String relation = relationName[increment];
-                                            ctx.defineVariable("relationVar", relation);
-                                            ctx.continueTask();
-                                        })
-                                .pipe(uocTokenizeRelation(tokenizerVar))
+                                .pipe(uocTokenizeRelation(tokenizerVar, relationName))
                 );
 
     }
@@ -116,13 +82,19 @@ public class TokenizedRelationTasks {
      * @param tokenizerVar
      * @return
      */
-    private static Task uocTokenizeRelation(String tokenizerVar) {
+    private static Task uocTokenizeRelation(String tokenizerVar, String relationName) {
         return newTask()
-                .readVar("nodeVar")
-                .travelInTime("{{time}}")
-                .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, NODE_NAME, "{{relationVar}}")
+                .thenDo(ctx -> {
+                    Node node = (Node) ctx.variable("nodeVar").get(0);
+                    node.travelInTime(ctx.time(), result -> {
+                        ctx.setVariable("nodeVar", result);
+                        node.free();
+                        ctx.continueWith(ctx.wrap(result));
+                    });
+                })
+                .traverse(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, NODE_NAME, relationName)
                 .then(ifEmptyThenElse(
-                        createTokenRelation(tokenizerVar),
+                        createTokenRelation(tokenizerVar, relationName),
                         updateTokenRelation(tokenizerVar)
                 ));
     }
@@ -133,114 +105,48 @@ public class TokenizedRelationTasks {
      */
     private static Task updateTokenRelation(String tokenizerVar) {
         return newTask()
-                .defineAsVar("relationNode")
-                .then(checkForFuture()) //TODO children world
+                /**.defineAsVar("relationNode")
+                .then(checkForFuture())
                 .thenDo(ctx -> {
-                    long dephasing = ctx.resultAsNodes().get(0).timeDephasing();
-                    if (dephasing == 0L)
+                    Node node = ctx.resultAsNodes().get(0);
+                    long dephasing = node.timeDephasing();
+                    if (dephasing == 0L) {
                         ctx.endTask(ctx.result(), new RuntimeException("Trying to modify a tokenize content at the time of the previous modification"));
-                    else
-                        ctx.continueTask();
-                })
-                .thenDo(
-                        ctx -> {
-                            Node node = ctx.resultAsNodes().get(0);
-                            long relationNodeId = node.id();
-                            String type = (String) node.get(TOKENIZE_CONTENT_TYPE);
-                            Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                            if (!type.equals(tokenizer.getTypeOfToken()) || ((boolean) node.get(TOKENIZE_CONTENT_DELIMITERS) != tokenizer.isKeepingDelimiterActivate())) {
-                                ctx.endTask(ctx.result(), new RuntimeException("Different Tokenizer use for the update"));
+                    } else {
+                        //long relationNodeId = node.id();
+                        String type = (String) node.get(TOKENIZE_CONTENT_TYPE);
+                        Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
+                        if (!type.equals(tokenizer.getTypeOfToken()) || ((boolean) node.get(TOKENIZE_CONTENT_DELIMITERS) != tokenizer.isKeepingDelimiterActivate())) {
+                            ctx.endTask(ctx.result(), new RuntimeException("Different Tokenizer use for the update"));
+                        }
+                        LongLongMap mapPatch = (LongLongMap) node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
+                        IntArray relation = (IntArray) node.get(TOKENIZE_CONTENT_TOKENS);
+                        int[] relationsId = IntArrayHandler.uncompress(relation.extract());
+                        Object[] newContent = ctx.variable("tokenizedContentVar").asArray();
+                        int[] newContentId = Arrays.stream(newContent).mapToInt(obj -> (int) obj).toArray();
+                        relation.initWith(IntArrayHandler.compress(newContentId));
+                        MinimumEditDistance med = new MinimumEditDistance(relationsId, newContentId);
+                        List<int[]> path = med.path();
+                        //int formerIndex = 0;
+                        int newIndex = 0;
+                        //EGraph vocabulary = (EGraph) ((Node) ctx.variable(VOCABULARY_VAR).get(0)).get(VOCABULARY);
+                        for (int i = 0; i < path.size(); i++) {
+                            if (path.get(i)[1] == MinimumEditDistance.DELETION) {
+                                //relation.removeElementbyIndex(newIndex);
+                                mapPatch.put(-i, path.get(i)[0]);
+                                //formerIndex++;
+                            } else if (path.get(i)[1] == MinimumEditDistance.INSERTION) {
+                                //relation.insertElementAt(newIndex, path.get(i)[0]);
+                                mapPatch.put(i, path.get(i)[0]);
+                                newIndex++;
+                            } else if (path.get(i)[1] == MinimumEditDistance.KEEP) {
+                                //formerIndex++;
+                                newIndex++;
                             }
-                            node.remove(TOKENIZE_CONTENT_PATCH);
-                            LongLongMap mapPatch = (LongLongMap) node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
-                            IntArray relation = (IntArray) node.get(TOKENIZE_CONTENT_TOKENS);
-                            int[] relationsId = relation.extract();
-
-                            Object[] newContent = ctx.variable("tokenizedContentVar").asArray();
-                            int[] newContentId = Arrays.stream(newContent).mapToInt(obj -> (int) obj).toArray();
-                            MinimumEditDistance med = new MinimumEditDistance(relationsId, newContentId);
-                            List<int[]> path = med.path();
-                            ctx.setVariable("formerIndex", 0);
-                            ctx.setVariable("newIndex", 0);
-                            ctx.setVariable("relation", relation);
-                            ctx.setVariable("relationNodeId", relationNodeId);
-                            ctx.setVariable("type", type);
-                            ctx.setVariable("mapPatch", mapPatch);
-                            ctx.continueWith(ctx.wrap(path));
-                        })
-                .map(
-                        newTask()
-                                .thenDo((TaskContext ctx) -> {
-                                            int[] action = new int[]{(int) ctx.result().get(0), (int) ctx.result().get(1)};
-                                            LongLongMap mapPatch = (LongLongMap) ctx.variable("mapPatch").get(0);
-                                            int index = (int) ctx.variable("i").get(0);
-                                            IntArray relation = (IntArray) ctx.variable("relation").get(0);
-                                            int newIndex = (int) ctx.variable("newIndex").get(0);
-                                            int formerIndex = (int) ctx.variable("formerIndex").get(0);
-                                            long relationNodeId = (long) ctx.variable("relationNodeId").get(0);
-                                            String type = (String) ctx.variable("type").get(0);
-                                            EGraph vocabulary = (EGraph) ((Node) ctx.variable(VOCABULARY_VAR).get(0)).get(VOCABULARY);
-
-                                            if (action[1] == MinimumEditDistance.DELETION) {
-                                                relation.removeElementbyIndex(newIndex);
-                                                mapPatch.put(-index, action[0]);
-                                                ENode enode = vocabulary.node(action[0]);
-                                                RelationIndexed relationIndexed = (RelationIndexed) enode.get(RELATION_INDEX_TOKEN_II);
-                                                relationIndexed.find(new Callback<Node[]>() {
-                                                    @Override
-                                                    public void on(Node[] result) {
-                                                        IntArray position = (IntArray) result[0].get(INVERTEDINDEX_POSITION);
-                                                        position.removeElement(formerIndex);
-                                                        ctx.graph().freeNodes(result);
-                                                        ctx.setVariable("formerIndex", formerIndex + 1);
-                                                        ctx.continueTask();
-                                                    }
-                                                }, ctx.world(), ctx.time(), INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(ctx.longVar("relationNodeId")));
-                                            } else if (action[1] == MinimumEditDistance.INSERTION) {
-                                                relation.insertElementAt(newIndex, action[0]);
-                                                mapPatch.put(index, action[0]);
-                                                ENode enode = vocabulary.node(action[0]);
-                                                RelationIndexed relationIndexed = (RelationIndexed) enode.getOrCreate(RELATION_INDEX_TOKEN_II, Type.RELATION_INDEXED);
-                                                long[] nodeExisting = relationIndexed.select(INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(ctx.longVar("relationNodeId")));
-                                                final Node[] ii = new Node[1];
-                                                DeferCounter deferCounter = ctx.graph().newCounter(1);
-                                                if (nodeExisting.length == 0) {
-                                                    ii[0] = ctx.graph().newNode(ctx.world(), ctx.time());
-                                                    ii[0].set(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, ctx.longVar("relationNodeId"));
-                                                    ii[0].set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_INVERTED_INDEX));
-                                                    ii[0].set(INVERTEDINDEX_TOKEN, Type.INT, enode.id());
-                                                    ii[0].set(INVERTEDINDEX_TYPE, Type.STRING, ctx.variable("type").get(0));
-                                                    relationIndexed.add(ii[0], INVERTEDINDEX_TOKENIZEDCONTENT);
-                                                    deferCounter.count();
-                                                } else {
-                                                    ctx.graph().lookup(ctx.world(), ctx.time(), nodeExisting[0], result -> {
-                                                        ii[0] = result;
-                                                        deferCounter.count();
-                                                    });
-                                                }
-                                                deferCounter.then(() -> {
-                                                    IntArray position = (IntArray) ii[0].getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
-                                                    position.addElement(newIndex);
-                                                    ii[0].free();
-                                                    ctx.setVariable("newIndex", newIndex + 1);
-                                                    ctx.continueTask();
-                                                });
-
-                                            } else if (action[1] == MinimumEditDistance.KEEP) {
-                                                ENode enode = vocabulary.node(action[0]);
-                                                RelationIndexed relationIndexed = (RelationIndexed) enode.get(RELATION_INDEX_TOKEN_II);
-                                                relationIndexed.find(result -> {
-                                                    IntArray position = (IntArray) result[0].get(INVERTEDINDEX_POSITION);
-                                                    position.replaceElementby(formerIndex, newIndex);
-                                                    ctx.graph().freeNodes(result);
-                                                    ctx.setVariable("formerIndex", formerIndex + 1);
-                                                    ctx.setVariable("newIndex", newIndex + 1);
-                                                    ctx.continueTask();
-                                                }, ctx.world(), ctx.time(), INVERTEDINDEX_TOKENIZEDCONTENT, String.valueOf(ctx.longVar("relationNodeId")));
-                                            }
-                                        }
-                                )
-                );
+                        }
+                    }
+                    ctx.continueTask();
+                })*/;
 
     }
 
@@ -248,52 +154,59 @@ public class TokenizedRelationTasks {
      * @param tokenizerVar
      * @return
      */
-    private static Task createTokenRelation(String tokenizerVar) {
+
+    private static Task createTokenRelation(String tokenizerVar, String relationName) {
         return newTask()
-                .createNode()
-                .thenDo(ctx -> {
+                .thenDo((TaskContext ctx) -> {
+
                             Tokenizer tokenizer = (Tokenizer) ctx.variable(tokenizerVar).get(0);
-                            Node node = ctx.resultAsNodes().get(0);
-                            node.set(NODE_NAME, Type.STRING, ctx.variable("relationVar").get(0));
+
+                            Node node = ctx.graph().newNode(ctx.world(), ctx.time());
                             node.set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_TOKENIZE_CONTENT));
-                            node.set(TOKENIZE_CONTENT_TYPE, Type.STRING, tokenizer.getTypeOfToken());
-                            node.set(TOKENIZE_CONTENT_DELIMITERS, Type.BOOL, tokenizer.isKeepingDelimiterActivate());
+
+                            String typeOfToken = tokenizer.getTypeOfToken();
+                            node.set(TOKENIZE_CONTENT_TYPE, Type.STRING, typeOfToken);
+                            node.set(NODE_NAME, Type.STRING, relationName);
                             node.set(TOKENIZE_CONTENT_TOKENIZERTYPE, Type.INT, tokenizer.getType());
-                            node.getOrCreate(TOKENIZE_CONTENT_PATCH, Type.LONG_TO_LONG_MAP);
-                            IntArray tokens = (IntArray) node.getOrCreate(TOKENIZE_CONTENT_TOKENS, Type.INT_ARRAY);
+
+                            Object[] indexedTokens = ctx.variable("indexedTokens").asArray();
+                            Object[] positionIndexedTokens = ctx.variable("positionIndexedTokens").asArray();
+                            Map<Integer, String> outcastPosition = (Map<Integer, String>) ctx.variable("outcast").get(0);
+                            int sizeTC = ctx.intVar("sizeTC");
+                            Map<Integer, Integer> delimitersPosition = (Map<Integer, Integer>) ctx.variable("delimitersPosition").get(0);
+                            Map<Integer, Integer> integerPosition = (Map<Integer, Integer>) ctx.variable("integerPosition").get(0);
+
+
+                            IntIntMap itokens = (IntIntMap) node.getOrCreate(TOKENIZE_CONTENT_INDEXEDTOKENS, Type.INT_TO_INT_MAP);
+                            for (int i = 0; i < indexedTokens.length; i++) {
+                                itokens.put((int)positionIndexedTokens[i], (int)indexedTokens[i]);
+                            }
+
+
+                            IntIntMap delimiters = (IntIntMap) node.getOrCreate(TOKENIZE_CONTENT_DELIMITERS, Type.INT_TO_INT_MAP);
+                            if (delimitersPosition != null) {
+                                for (Map.Entry<Integer, Integer> delimiter : delimitersPosition.entrySet()) {
+                                    delimiters.put(delimiter.getKey(), delimiter.getValue());
+                                }
+                            }
+
+                            IntIntMap integers = (IntIntMap) node.getOrCreate(TOKENIZE_CONTENT_INTEGER, Type.INT_TO_INT_MAP);
+                            if (integerPosition != null) {
+                                for (Map.Entry<Integer, Integer> integer : integerPosition.entrySet()) {
+                                    integers.put(integer.getKey(), integer.getValue());
+                                }
+                            }
+                            IntStringMap outcasts = (IntStringMap) node.getOrCreate(TOKENIZE_CONTENT_OUTCAST, Type.INT_TO_STRING_MAP);
+                            if (outcastPosition != null) {
+                                for (Map.Entry<Integer, String> outcast : outcastPosition.entrySet()) {
+                                    outcasts.put(outcast.getKey(), outcast.getValue());
+                                }
+                            }
+
+                            node.set(TOKENIZE_CONTENT_SIZE, Type.INT, sizeTC);
                             node.addToRelation(RELATION_TOKENIZECONTENT_TO_NODE, (Node) ctx.variable("nodeVar").get(0));
                             ((Node) ctx.variable("nodeVar").get(0)).addToRelation(RELATION_INDEX_NODE_TO_TOKENIZECONTENT, node, NODE_NAME);
-
-
-                            Object[] tokenizedContentVar = ctx.variable("tokenizedContentVar").asArray();
-                            int[] words = Arrays.stream(tokenizedContentVar).mapToInt(obj -> (int) obj).toArray();
-                            //EGraph eGraph = (EGraph) ((Node) ctx.variable(VOCABULARY_VAR).get(0)).get(VOCABULARY);
-
-                            tokens.initWith(words);
-
-                            /**HashMap<Integer, List<Integer>> mapOfWords = new HashMap();
-                             for (int i = 0; i < words.length; i++) {
-                             if (mapOfWords.containsKey(words[i])) {
-                             mapOfWords.get(words[i]).add(i);
-                             } else {
-                             List<Integer> position = new ArrayList<>();
-                             position.add(i);
-                             mapOfWords.put(words[i], position);
-                             }
-                             }
-                             for (Map.Entry<Integer, List<Integer>> entry : mapOfWords.entrySet()) {
-                             ENode enode = eGraph.node(entry.getKey());
-                             RelationIndexed relationIndexed = (RelationIndexed) enode.getOrCreate(RELATION_INDEX_TOKEN_II, Type.RELATION_INDEXED);
-                             Node newInvertedIndex = ctx.graph().newNode(ctx.world(), ctx.time());
-                             newInvertedIndex.set(INVERTEDINDEX_TOKENIZEDCONTENT, Type.LONG, node.id());
-                             newInvertedIndex.set(NODE_TYPE, Type.INT, Integer.valueOf(NODE_TYPE_INVERTED_INDEX));
-                             newInvertedIndex.set(INVERTEDINDEX_TOKEN, Type.INT, enode.id());
-                             newInvertedIndex.set(INVERTEDINDEX_TYPE, Type.STRING, tokenizer.getTypeOfToken());
-                             relationIndexed.add(newInvertedIndex, INVERTEDINDEX_TOKENIZEDCONTENT);
-                             IntArray position = (IntArray) newInvertedIndex.getOrCreate(INVERTEDINDEX_POSITION, Type.INT_ARRAY);
-                             position.initWith(entry.getValue().stream().mapToInt(obj -> obj).toArray());
-                             newInvertedIndex.free();
-                             }*/
+                            node.free();
                             ctx.continueTask();
                         }
                 );

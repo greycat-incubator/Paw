@@ -15,41 +15,101 @@
  */
 package paw.tokeniser.tokenisation.misc;
 
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.Utils;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Simple Tokenizer
  *
  * Tokenizer that just split according to space
  * and apply the preprocessor on each tokens
+ *
+ * Options : Drop URL
  */
 public class SimpleTokenizer extends Tokenizer {
 
     public final static String ID = "SIMPLE TOKENIZER";
+    private final static boolean DROP_URL = true;
+
 
     @Override
-    public String[] tokenize(Reader reader) throws IOException {
-        final List<String> tokens = new ArrayList<>();
+    @SuppressWarnings("Duplicates")
+    public TokenizedString tokenize(Reader reader) throws IOException {
+        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, Integer> delimiter = new HashMap<>();
+        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        Map<Integer, String> outcast = null;
+        if (isCheckContent()) {
+            outcast = new HashMap<>();
+        }
         int ch;
         StringBuilder sw = new StringBuilder();
+        int index = 0;
         while ((ch = reader.read()) != -1) {
             if (!Character.isSpaceChar((char) ch)) {
                 sw.append((char) ch);
             } else {
-                tokens.add(applyAllTokenPreprocessorTo(sw.toString()));
-                sw = new StringBuilder();
+                if (sw.length() > 0) {
+                    String s = sw.toString();
+                    if (isCheckContent() && check(s)) {
+                        outcast.put(index, s);
+                    } else {
+                        if (Utils.isNumericArray(s)) {
+                            try {
+                                int integer = Integer.parseInt(s);
+                                integerPosition.put(index, integer);
+                            } catch (NumberFormatException e) {
+                                outcast.put(index, s);
+                            }
+                        } else {
+                            tokens.put(index, applyAllTokenPreprocessorTo(s));
+                        }
+                    }
+                    sw = new StringBuilder();
+                }
+
+                index++;
+                delimiter.put(index, ch);
+                index++;
             }
         }
-        if (sw.length() != 0)
-            tokens.add(applyAllTokenPreprocessorTo(sw.toString()));
-        return tokens.toArray(new String[tokens.size()]);
+        if (sw.length() != 0) {
+            String s = sw.toString();
+            if (isCheckContent() && check(s)) {
+                outcast.put(index, s);
+            } else {
+                if (Utils.isNumericArray(s)) {
+                    integerPosition.put(index, Integer.parseInt(s));
+                } else {
+                    tokens.put(index, applyAllTokenPreprocessorTo(s));
+                }
+            }
+            index++;
+        }
+
+        return new TokenizedString(tokens, integerPosition, delimiter, outcast, index);
     }
+
+    @SuppressWarnings("Duplicates")
+    private boolean check(String s) {
+        boolean ok;
+        if (DROP_URL) {
+            Matcher matcher = patt.matcher(s);
+            ok = matcher.matches();
+        }
+        return ok;
+    }
+
+    static Pattern patt = Pattern.compile("\\\\b(https?|ftp|file)://[-A-Z0-9+&@#/%?=~_|!:,.;]*[-A-Z0-9+&@#/%=~_|]");
 
     @Override
     public String toString() {

@@ -130,7 +130,7 @@ public class RadixTree implements WordIndex {
                 enode.getOrCreate(NODE_CHILD, Type.INT_ARRAY);
 
                 eChild = (IntArray) intermediaryEnode.getOrCreate(NODE_CHILD, Type.INT_ARRAY);
-                eChild.addAll(new int[]{enode.id(), searchResult.nodeFound.id()});
+                eChild.initWith(new int[]{searchResult.nodeFound.id(),enode.id()});
 
                 parent = searchResult.parentNode.id();
                 intermediaryEnode.set(NODE_PARENT, Type.INT, parent);
@@ -243,8 +243,7 @@ public class RadixTree implements WordIndex {
                     int id = searchResult.nodeFound.id();
                     ENode child = egraph.node(children.get(0));
                     IntArray parentChild = (IntArray) searchResult.parentNode.get(NODE_CHILD);
-                    parentChild.removeElement(id);
-                    parentChild.addElement(child.id());
+                    parentChild.replaceElementby(id, child.id());
                     child.set(NODE_PARENT, Type.INT, searchResult.parentNode.id());
                     egraph.drop(searchResult.nodeFound);
                     return true;

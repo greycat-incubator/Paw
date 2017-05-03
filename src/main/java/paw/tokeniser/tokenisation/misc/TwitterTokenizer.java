@@ -15,13 +15,15 @@
  */
 package paw.tokeniser.tokenisation.misc;
 
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.Utils;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A twitter tokenizer implementation
@@ -29,6 +31,7 @@ import java.util.List;
  *
  * The tokenizer keep utf-8 encoding and mentions
  */
+@SuppressWarnings("Duplicates")
 public class TwitterTokenizer extends Tokenizer {
 
     public final static String ID = "TWITTER TOKENIZER";
@@ -37,59 +40,104 @@ public class TwitterTokenizer extends Tokenizer {
     private final static int maxNumOfSameConseqLetterPerTerm = 10;
     private final static int maxWordLength = 140;
     private final static boolean DROP_LONG_TOKENS = true;
+    private final static boolean MAX_NUMBER_LETTER = false;
+    private final static boolean HASH = true;
 
 
     @Override
-    public String[] tokenize(Reader reader) throws IOException {
-        List<String> tokens = new ArrayList<>();
+    public TokenizedString tokenize(Reader reader) throws IOException {
+        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, Integer> delimiter = new HashMap<>();
+        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, String> outcast = new HashMap<>();
+        int index = 0;
         int ch = reader.read();
         while (ch != -1) {
 
             while (ch != -1 && !(ch == '/') && !(ch == '@') && !(Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)
-                    )
+                    ) {
 
-            {
-                if (isKeepingDelimiterActivate())
-                    tokens.add(applyAllTokenPreprocessorTo(String.valueOf((char) ch)));
+                delimiter.put(index, ch);
+                index++;
+
                 ch = reader.read();
             }
-            StringBuilder sw = new StringBuilder(maxWordLength);
+            StringBuilder sw = new StringBuilder();
             while (ch != -1 && (Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK || ch == '/' || ch == '@')) {
                 sw.append((char) ch);
                 ch = reader.read();
             }
-            if (sw.length() > 0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
-                sw.setLength(maxWordLength);
-                String s = check(sw.toString());
-                if (s != null)
-                    tokens.add(applyAllTokenPreprocessorTo(s));
+            String s = sw.toString();
+            if (s.length() != 0) {
+                if (isCheckContent() && check(s)) {
+                    outcast.put(index, s);
+                } else {
+                    if (Utils.isNumericArray(s)) {
+                        try{
+                            int integer = Integer.parseInt(s);
+                            integerPosition.put(index, integer);
+                        }catch (NumberFormatException e){
+                            outcast.put(index,s);
+                        }
+                    } else {
+                        tokens.put(index, applyAllTokenPreprocessorTo(s));
+                    }
+                }
+                index++;
             }
+
         }
-        return tokens.toArray(new String[tokens.size()]);
+        return new TokenizedString(tokens, integerPosition, delimiter, outcast, index);
+
     }
 
     @SuppressWarnings("Duplicates")
-    static String check(String s) {
-        s = s.trim();
-        final int length = s.length();
-        int counter = 0;
-        int counterdigit = 0;
-        int ch = -1;
-        int chNew;
-        for (int i = 0; i < length; i++) {
-            chNew = s.charAt(i);
-            if (Character.isDigit(chNew))
-                counterdigit++;
-            if (ch == chNew)
-                counter++;
-            else
-                counter = 1;
-            ch = chNew;
-            if (counter > maxNumOfSameConseqLetterPerTerm
-                    || counterdigit > maxNumberOfDigitPerTerm)
-                return null;
+    private boolean check(String s) {
+        if (DROP_LONG_TOKENS) {
+            if (s.length() > maxWordLength)
+                return true;
         }
-        return s;
+        if (MAX_NUMBER_LETTER) {
+            final int length = s.length();
+            int counter = 0;
+            int counterdigit = 0;
+            int ch = -1;
+            int chNew;
+            for (int i = 0; i < length; i++) {
+                chNew = s.charAt(i);
+                if (Character.isDigit(chNew))
+                    counterdigit++;
+                if (ch == chNew)
+                    counter++;
+                else
+                    counter = 1;
+                ch = chNew;
+                if (counter > maxNumOfSameConseqLetterPerTerm
+                        || counterdigit > maxNumberOfDigitPerTerm)
+                    return true;
+            }
+        }
+        if (HASH) {
+            if (s.charAt(0) != '@') {
+                final int length = s.length();
+                int counterCap = 0;
+                int counterdigit = 0;
+                int counterlow = 0;
+                int ch;
+                for (int i = 0; i < length; i++) {
+                    ch = s.charAt(i);
+                    if (Character.isDigit(ch))
+                        counterdigit++;
+                    else if (Character.isUpperCase(ch))
+                        counterCap++;
+                    if (Character.isLowerCase(ch))
+                        counterlow++;
+                    if (counterCap > 0 && counterlow > 0 && counterdigit > 0)
+                        return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Override

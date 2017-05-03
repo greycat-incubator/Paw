@@ -21,7 +21,6 @@ import greycat.Node;
 import greycat.Type;
 import greycat.scheduler.TrampolineScheduler;
 import mylittleplugin.MyLittleActionPlugin;
-import paw.greycat.PawPlugin;
 
 import static greycat.Constants.BEGINNING_OF_TIME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,7 +31,6 @@ public abstract class ActionTest {
     @SuppressWarnings("Duplicates")
     protected void initGraph() {
         graph = new GraphBuilder()
-                .withPlugin(new PawPlugin())
                 .withPlugin(new MyLittleActionPlugin())
                 .withScheduler(new TrampolineScheduler()).build();
         final ActionTest selfPointer = this;

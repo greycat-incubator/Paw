@@ -15,18 +15,21 @@
  */
 package paw.tokeniser.tokenisation.nl;
 
+import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.Utils;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * An english Tokenizer
  * based on Terrier English tokenizer
  */
+@SuppressWarnings("Duplicates")
 public class EnglishTokenizer extends Tokenizer {
     public final static String ID = "ENGLISH TOKENIZER";
 
@@ -34,18 +37,28 @@ public class EnglishTokenizer extends Tokenizer {
     private final static int maxNumOfSameConseqLetterPerTerm = 3;
     private final static int maxWordLength = 30;
     private final static boolean DROP_LONG_TOKENS = true;
+    private final static boolean MAX_NUMBER_LETTER = true;
+    private final static boolean HASH = true;
 
     @Override
-    public String[] tokenize(Reader reader) throws IOException {
-        List<String> tokens = new ArrayList<>();
+    public TokenizedString tokenize(Reader reader) throws IOException {
+        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, Integer> delimiter = new HashMap<>();
+        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, String> outcast =  new HashMap<>();
+
+        int index = 0;
         int ch = reader.read();
         while (ch != -1) {
 
             while (ch != -1 && (ch < 'A' || ch > 'Z') && (ch < 'a' || ch > 'z')
                     && (ch < '0' || ch > '9')
                     ) {
-                if (isKeepingDelimiterActivate())
-                    tokens.add(String.valueOf((char) ch));
+
+
+                delimiter.put(index, ch);
+                index++;
+
                 ch = reader.read();
             }
 
@@ -57,14 +70,26 @@ public class EnglishTokenizer extends Tokenizer {
                 sw.append((char) ch);
                 ch = reader.read();
             }
-            if (sw.length() > 0 && (sw.length() < maxWordLength || !DROP_LONG_TOKENS)) {
-                sw.setLength(maxWordLength);
-                String s = check(sw.toString());
-                if (s != null)
-                    tokens.add(applyAllTokenPreprocessorTo(s));
+            String s = sw.toString();
+            if (s.length() == 0) {
+                if (isCheckContent() && check(s)) {
+                    outcast.put(index, s);
+                } else {
+                    if (Utils.isNumericArray(s)) {
+                        try{
+                            int integer = Integer.parseInt(s);
+                            integerPosition.put(index, integer);
+                        }catch (NumberFormatException e){
+                            outcast.put(index,s);
+                        }
+                    } else {
+                        tokens.put(index, applyAllTokenPreprocessorTo(s));
+                    }
+                }
+                index++;
             }
         }
-        return tokens.toArray(new String[tokens.size()]);
+        return new TokenizedString(tokens, integerPosition, delimiter, outcast, index);
     }
 
 
@@ -76,27 +101,50 @@ public class EnglishTokenizer extends Tokenizer {
      * @param s String the term to check if it is valid.
      * @return String the term if it is valid, otherwise it returns null.
      */
-    static String check(String s) {
-        s = s.trim();
-        final int length = s.length();
-        int counter = 0;
-        int counterdigit = 0;
-        int ch = -1;
-        int chNew;
-        for (int i = 0; i < length; i++) {
-            chNew = s.charAt(i);
-            if (chNew >= 48 && chNew <= 57)
-                counterdigit++;
-            if (ch == chNew)
-                counter++;
-            else
-                counter = 1;
-            ch = chNew;
-            if (counter > maxNumOfSameConseqLetterPerTerm
-                    || counterdigit > maxNumberOfDigitPerTerm)
-                return null;
+    static boolean check(String s) {
+        if (DROP_LONG_TOKENS) {
+            if (s.length() > maxWordLength)
+                return true;
         }
-        return s;
+        if (MAX_NUMBER_LETTER) {
+            final int length = s.length();
+            int counter = 0;
+            int counterdigit = 0;
+            int ch = -1;
+            int chNew;
+            for (int i = 0; i < length; i++) {
+                chNew = s.charAt(i);
+                if (Character.isDigit(chNew))
+                    counterdigit++;
+                if (ch == chNew)
+                    counter++;
+                else
+                    counter = 1;
+                ch = chNew;
+                if (counter > maxNumOfSameConseqLetterPerTerm
+                        || counterdigit > maxNumberOfDigitPerTerm)
+                    return true;
+            }
+        }
+        if (HASH) {
+            final int length = s.length();
+            int counterCap = 0;
+            int counterdigit = 0;
+            int counterlow = 0;
+            int ch;
+            for (int i = 0; i < length; i++) {
+                ch = s.charAt(i);
+                if (Character.isDigit(ch))
+                    counterdigit++;
+                else if (Character.isUpperCase(ch))
+                    counterCap++;
+                if (Character.isLowerCase(ch))
+                    counterlow++;
+                if (counterCap > 0 && counterlow > 0 && counterdigit > 0)
+                    return true;
+            }
+        }
+        return false;
     }
 
     @Override
