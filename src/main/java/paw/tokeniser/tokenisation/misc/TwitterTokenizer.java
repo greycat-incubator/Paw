@@ -18,6 +18,7 @@ package paw.tokeniser.tokenisation.misc;
 import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.LowerString;
 import paw.utils.Utils;
 
 import java.io.IOException;
@@ -46,22 +47,26 @@ public class TwitterTokenizer extends Tokenizer {
 
     @Override
     public TokenizedString tokenize(Reader reader) throws IOException {
-        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, LowerString> tokens = new HashMap<>();
         final Map<Integer, Integer> delimiter = new HashMap<>();
-        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, Integer> ints = new HashMap<>();
         final Map<Integer, String> outcast = new HashMap<>();
         int index = 0;
         int ch = reader.read();
         while (ch != -1) {
-
+            /**
+             * Delimiters
+             */
             while (ch != -1 && !(ch == '/') && !(ch == '@') && !(Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK)
                     ) {
-
                 delimiter.put(index, ch);
                 index++;
-
                 ch = reader.read();
             }
+
+            /**
+             * Content
+             */
             StringBuilder sw = new StringBuilder();
             while (ch != -1 && (Character.isLetterOrDigit((char) ch) || Character.getType((char) ch) == Character.NON_SPACING_MARK || Character.getType((char) ch) == Character.COMBINING_SPACING_MARK || ch == '/' || ch == '@')) {
                 sw.append((char) ch);
@@ -73,21 +78,21 @@ public class TwitterTokenizer extends Tokenizer {
                     outcast.put(index, s);
                 } else {
                     if (Utils.isNumericArray(s)) {
-                        try{
-                            int integer = Integer.parseInt(s);
-                            integerPosition.put(index, integer);
-                        }catch (NumberFormatException e){
-                            outcast.put(index,s);
+                        if (s.length() > 8) {
+                            int number = Integer.parseInt(s);
+                            ints.put(index, number);
+                        } else {
+                            outcast.put(index, s);
                         }
                     } else {
-                        tokens.put(index, applyAllTokenPreprocessorTo(s));
+                        tokens.put(index, new LowerString(s));
                     }
                 }
                 index++;
             }
 
         }
-        return new TokenizedString(tokens, integerPosition, delimiter, outcast, index);
+        return new TokenizedString(tokens, ints, delimiter, outcast, index);
 
     }
 
@@ -132,7 +137,7 @@ public class TwitterTokenizer extends Tokenizer {
                         counterCap++;
                     if (Character.isLowerCase(ch))
                         counterlow++;
-                    if (counterCap > 0 && counterlow > 0 && counterdigit > 0)
+                    if ((counterCap > 0 || counterlow > 0) && counterdigit > 0)
                         return true;
                 }
             }

@@ -126,7 +126,8 @@ public class VocabularyTasks {
         IntIntMap intIntMapMap = node.getIntIntMap(VOCABULARY_MAP);
         int[] eNodesId = new int[tokens.length];
         for (int i = 0; i < tokens.length; i++) {
-            int hash = HashHelper.hash(tokens[i]);
+            String token = tokens[i].toLowerCase();
+            int hash = HashHelper.hash(token);
             int enode = intIntMapMap.get(hash);
             if (enode != Constants.NULL_INT) {
                 eNodesId[i] = enode;
@@ -134,7 +135,7 @@ public class VocabularyTasks {
                 Node voc = (Node) ctx.variable(VOCABULARY).get(0);
                 EGraph eGraph = (EGraph) voc.get(VOCABULARY);
                 WordIndex wordIndex = new RadixTree(eGraph);
-                int nodeId = wordIndex.getOrCreate(tokens[i]);
+                int nodeId = wordIndex.getOrCreate(token);
                 intIntMapMap.put(hash, nodeId);
                 eNodesId[i] = nodeId;
             }

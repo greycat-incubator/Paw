@@ -18,6 +18,7 @@ package paw.tokeniser.tokenisation.misc;
 import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.LowerString;
 import paw.utils.Utils;
 
 import java.io.IOException;
@@ -54,29 +55,26 @@ public class IdentityTokenizer extends Tokenizer {
     /**
      * As it is an identity tokenizer, i.e., without real tokenization the tokenize String method can ba overwritten
      *
-     * @param string to tokenize
+     * @param s to tokenize
      * @return the same string but with all preprocessor applied.
      */
     @Override
-    public TokenizedString tokenize(String string) {
-        String s = applyAllTokenPreprocessorTo(string);
-
+    public TokenizedString tokenize(String s) {
         if (s.length() != 0) {
-
             if (Utils.isNumericArray(s)) {
-                try{
-                    int integer = Integer.parseInt(s);
-                    Map<Integer, Integer> integers = new HashMap<>(1);
-                    integers.put(0, integer);
-                    return new TokenizedString(null, integers, null, null, 1);
-                }catch (NumberFormatException e){
+                try {
+                    int number = Integer.parseInt(s);
+                    Map<Integer, Integer> ints = new HashMap<>(1);
+                    ints.put(0, number);
+                    return new TokenizedString(null, ints, null, null, 1);
+                } catch (NumberFormatException e) {
                     Map<Integer, String> outcasts = new HashMap<>(1);
-                    outcasts.put(0,s);
+                    outcasts.put(0, s);
                     return new TokenizedString(null, null, null, outcasts, 1);
                 }
             } else {
-                Map<Integer, String> onlyTokenMap = new HashMap<>(1);
-                onlyTokenMap.put(0, s);
+                Map<Integer, LowerString> onlyTokenMap = new HashMap<>(1);
+                onlyTokenMap.put(0, new LowerString(s));
                 return new TokenizedString(onlyTokenMap, null, null, null, 1);
             }
         } else {
@@ -86,7 +84,7 @@ public class IdentityTokenizer extends Tokenizer {
 
     @Override
     public String toString() {
-        return ID + "\n" + super.toString();
+        return ID;
     }
 
     @Override

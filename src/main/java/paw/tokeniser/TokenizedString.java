@@ -1,16 +1,18 @@
 package paw.tokeniser;
 
+import paw.utils.LowerString;
+
 import java.util.Map;
 
 public class TokenizedString {
     private Map<Integer, Integer> _delimitersPosition;
     private Map<Integer, Integer> _numberPosition;
-    private Map<Integer, String> _tokensPosition;
+    private Map<Integer, LowerString> _tokensPosition;
     private Map<Integer, String> _outcastPosition;
     private int _size;
 
 
-    public TokenizedString(Map<Integer, String> tokensPosition, Map<Integer, Integer> numberPosition, Map<Integer, Integer> delimitersPosition,Map<Integer, String> outcastPosition, int size) {
+    public TokenizedString(Map<Integer, LowerString> tokensPosition, Map<Integer, Integer> numberPosition, Map<Integer, Integer> delimitersPosition, Map<Integer, String> outcastPosition, int size) {
         this._size = size;
         this._delimitersPosition = delimitersPosition;
         this._numberPosition = numberPosition;
@@ -27,7 +29,7 @@ public class TokenizedString {
             } else if (_tokensPosition.containsKey(i)) {
                 sb.append(_tokensPosition.get(i));
             } else if (_numberPosition.containsKey(i)) {
-                sb.append(_numberPosition.get(i).intValue());
+                sb.append(_numberPosition.get(i).longValue());
             } else if (_outcastPosition.containsKey(i)) {
                 sb.append(_outcastPosition.get(i));
             } else {
@@ -45,7 +47,7 @@ public class TokenizedString {
         return _numberPosition;
     }
 
-    public Map<Integer, String> get_tokensPosition() {
+    public Map<Integer, LowerString> get_tokensPosition() {
         return _tokensPosition;
     }
 

@@ -22,6 +22,7 @@ import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
 import paw.tokeniser.tokenisation.pl.cpp.antlr.CPP14Lexer;
+import paw.utils.LowerString;
 import paw.utils.Utils;
 
 import java.io.IOException;
@@ -43,9 +44,9 @@ public class CPPTokenizer extends Tokenizer {
 
     @Override
     public TokenizedString tokenize(Reader reader) throws IOException {
-        final Map<Integer, String> tokens = new HashMap<>();
+        final Map<Integer, LowerString> tokens = new HashMap<>();
         final Map<Integer, Integer> delimiter = new HashMap<>();
-        final Map<Integer, Integer> integerPosition = new HashMap<>();
+        final Map<Integer, Integer> ints = new HashMap<>();
         final Map<Integer, String> outcast = new HashMap<>();
         ANTLRInputStream inputStream = new ANTLRInputStream(reader);
         CPP14Lexer lexer = new CPP14Lexer(inputStream);
@@ -55,21 +56,18 @@ public class CPPTokenizer extends Tokenizer {
         for (int i = 0; i < list.size(); i++) {
             String res = list.get(i).getText();
             if (Utils.isNumericArray(res)) {
-                try {
-                    int integer = Integer.parseInt(res);
-                    integerPosition.put(i, integer);
-                } catch (NumberFormatException e) {
-                    outcast.put(i, res);
-                }
+                int number = Integer.parseInt(res);
+                ints.put(i, number);
+
             } else {
                 if (res.length() == 1 && !Character.isAlphabetic(res.codePointAt(0))) {
                     delimiter.put(i, res.codePointAt(0));
                 } else {
-                    tokens.put(i, applyAllTokenPreprocessorTo(res));
+                    tokens.put(i, new LowerString(res));
                 }
             }
         }
-        return new TokenizedString(tokens, integerPosition, delimiter, outcast, list.size());
+        return new TokenizedString(tokens, ints, delimiter, outcast, list.size());
     }
 
     @Override

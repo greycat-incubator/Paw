@@ -18,6 +18,7 @@ package paw.tokeniser.tokenisation.misc;
 import paw.tokeniser.TokenizedString;
 import paw.tokeniser.Tokenizer;
 import paw.tokeniser.tokenisation.TokenizerType;
+import paw.utils.LowerString;
 import paw.utils.Utils;
 
 import java.io.IOException;
@@ -44,39 +45,38 @@ public class SimpleTokenizer extends Tokenizer {
     @Override
     @SuppressWarnings("Duplicates")
     public TokenizedString tokenize(Reader reader) throws IOException {
-        final Map<Integer, String> tokens = new HashMap<>();
+
+        final Map<Integer, LowerString> tokens = new HashMap<>();
         final Map<Integer, Integer> delimiter = new HashMap<>();
-        final Map<Integer, Integer> integerPosition = new HashMap<>();
-        Map<Integer, String> outcast = null;
-        if (isCheckContent()) {
-            outcast = new HashMap<>();
-        }
+        final Map<Integer, Integer> ints = new HashMap<>();
+        final Map<Integer, String> outcast = new HashMap<>();
+
         int ch;
         StringBuilder sw = new StringBuilder();
         int index = 0;
+
         while ((ch = reader.read()) != -1) {
             if (!Character.isSpaceChar((char) ch)) {
                 sw.append((char) ch);
             } else {
                 if (sw.length() > 0) {
                     String s = sw.toString();
-                    if (isCheckContent() && check(s)) {
+                    if (checkContent && check(s)) {
                         outcast.put(index, s);
                     } else {
                         if (Utils.isNumericArray(s)) {
-                            try {
-                                int integer = Integer.parseInt(s);
-                                integerPosition.put(index, integer);
-                            } catch (NumberFormatException e) {
+                            if (s.length() > 8) {
+                                int number = Integer.parseInt(s);
+                                ints.put(index, number);
+                            } else {
                                 outcast.put(index, s);
                             }
                         } else {
-                            tokens.put(index, applyAllTokenPreprocessorTo(s));
+                            tokens.put(index, new LowerString(s));
                         }
                     }
                     sw = new StringBuilder();
                 }
-
                 index++;
                 delimiter.put(index, ch);
                 index++;
@@ -88,15 +88,20 @@ public class SimpleTokenizer extends Tokenizer {
                 outcast.put(index, s);
             } else {
                 if (Utils.isNumericArray(s)) {
-                    integerPosition.put(index, Integer.parseInt(s));
+                    if (s.length() > 8) {
+                        int number = Integer.parseInt(s);
+                        ints.put(index, number);
+                    } else {
+                        outcast.put(index, s);
+                    }
                 } else {
-                    tokens.put(index, applyAllTokenPreprocessorTo(s));
+                    tokens.put(index, new LowerString(s));
                 }
             }
             index++;
         }
 
-        return new TokenizedString(tokens, integerPosition, delimiter, outcast, index);
+        return new TokenizedString(tokens, ints, delimiter, outcast, index);
     }
 
     @SuppressWarnings("Duplicates")
@@ -113,7 +118,7 @@ public class SimpleTokenizer extends Tokenizer {
 
     @Override
     public String toString() {
-        return ID + "\n" + super.toString();
+        return ID;
     }
 
     @Override
