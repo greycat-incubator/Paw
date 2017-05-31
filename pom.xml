@@ -37,7 +37,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <greycat.version>7-SNAPSHOT</greycat.version>
+        <greycat.version>8-SNAPSHOT</greycat.version>
         <header.path>${basedir}/HEADER</header.path>
     </properties>
 
@@ -60,11 +60,6 @@
             <groupId>com.datathings</groupId>
             <artifactId>greycat</artifactId>
             <version>${greycat.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>me.lemire.integercompression</groupId>
-            <artifactId>JavaFastPFOR</artifactId>
-            <version>0.1.10</version>
         </dependency>
         <dependency>
             <groupId>lu.jimenez.research</groupId>

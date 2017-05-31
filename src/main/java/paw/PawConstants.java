@@ -17,42 +17,68 @@ package paw;
 
 public class PawConstants {
 
+    /**
+     * GraphToken Type
+     */
+    public final static byte DELIMITER_TOKEN = 0;
+    public final static byte NUMBER_TOKEN = 1;
+    public final static byte CONTENT_TOKEN = 2;
 
-    public final static String TYPE_TOKEN_WITHOUT_TYPE = "noType";
+    /**
+     * Threshold
+     */
+    public final static int CACHE_THRESHOLD = 5;
 
+    /**
+     * Tokenizer Type
+     */
+    public final static byte IDENTITY_TOKENIZER = 0;
+    public final static byte SIMPLE_TOKENIZER = 1;
+    public final static byte UTF_TOKENIZER = 2;
+    public final static byte TWITTER_TOKENIZER = 3;
+    public final static byte JAVA_TOKENIZER = 4;
+    public final static byte CPP_TOKENIZER = 5;
 
+    /**
+     * Attribute Name
+     */
+    public final static String NODE_TYPE = "Ntype";
+    public final static String NODE_NAME = "Nname";
+    public final static String CACHE_MAP_HASH_ID = "mapHashId";
+    public final static String CACHE_EGRAPH = "egraph";
     public final static String RELATION_INDEX_ENTRY_POINT = "entryPoint";
-    public final static String RELATION_INDEX_NODE_TO_TOKENIZECONTENT = "tokenizedContents";
-    public final static String RELATION_TOKENIZECONTENT_TO_NODE = "father";
-    public final static String RELATION_INDEX_TOKEN_II = "invertedIndex";
+    public final static String INDEXING_NODE_RADIX_TREE = "iradix";
+    public final static String INDEXING_NODE_MAP_HASH_ID = "mapHashId";
+    public final static String CACHING_ENODE_COUNT = "count";
+    public final static String CACHING_ENODE_CONTENT = "content";
+    public final static String CACHING_ENODE_WHEN_WHERE = "whenwhere";
+    public final static String INVERTED_INDEX_NODE_MAP = "map";
+    public final static String TOKENIZED_CONTENT_TOKENS = "tokens";
+    public final static String EGRAPH_TOKEN_TYPE = "type";
+    public final static String EGRAPH_TOKEN_MASK = "mask";
+    public final static String EGRAPH_TOKEN_CONTENT = "content";
+    public final static String EGRAPH_TOKEN_CACHE_SUB = "cache";
+    public final static String EGRAPH_TOKEN_ID = "id";
+    public final static String EGRAPH_TOKEN_INVERTED_INDEX = "ii";
+    /**
+     * Node Types
+     */
+    public final static int VOCABULARY_NODE = 0;
+    public final static int NUMBER_MAIN_NODE = 1;
+    public final static int TEXT_MAIN_NODE = 2;
+    public final static int CACHING_NODE = 3;
+    public final static int INDEXING_NODE = 4;
+    public final static int SUB_CACHING_NODE = 5;
+    public final static int TOKENIZED_CONTENT = 6;
+    public final static int LOCAL_STATISTIC = 7;
+    /**
+     * Relation
+     */
+    public final static String RELATION_INDEXED_VOCABULARY_CHILDREN = "childrens";
+    public final static String RELATION_INDEXED_MAIN_NODES_CACHE_INDEX = "cacheIndex";
+    public final static String RELATION_INDEXED_CACHE_TO_SUBCACHE = "subcaches";
+    public final static String RELATION_INDEXED_NODE_TO_TOKENIZECONTENT = "tokenizedContents";
+    public final static String RELATION_TOKENIZECONTENT_TO_NODE = "fatherNode";
 
 
-
-    public final static String NODE_NAME = "name";
-
-    public final static String NODE_TYPE = "type";
-    public final static String NODE_TYPE_VOCABULARY = "0";
-    public final static String NODE_TYPE_TOKENIZE_CONTENT = "1";
-    public final static String NODE_TYPE_INVERTED_INDEX = "2";
-
-
-    public final static String VOCABULARY = "vocabulary";
-
-
-    public final static String TOKENIZE_CONTENT_PLUGIN = "plugin";
-    public final static String TOKENIZE_CONTENT_TYPE = "typeOfToken";
-    public final static String TOKENIZE_CONTENT_TOKENIZERTYPE = "typeOfTokenizer";
-    public final static String TOKENIZE_CONTENT_INDEXEDTOKENS = "itokens";
-    public final static String TOKENIZE_CONTENT_DELIMITERS = "delimiters";
-    public final static String TOKENIZE_CONTENT_OUTCAST = "outcasts";
-    public final static String TOKENIZE_CONTENT_INTEGER = "integers";
-    public final static String TOKENIZE_CONTENT_SIZE = "size";
-
-
-    public final static String INVERTEDINDEX_TOKENIZEDCONTENT = "tokenizedContent";
-    public final static String INVERTEDINDEX_POSITION = "position";
-    public final static String INVERTEDINDEX_TOKEN = "token";
-    public final static String INVERTEDINDEX_TYPE = "typeOfToken";
-
-    public final static int THRESHOLD = 3;
 }
