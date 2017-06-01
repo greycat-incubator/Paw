@@ -62,7 +62,6 @@ public class UTFTokenizer extends AbstractTokenizer {
         int i = 0;
         StringBuilder sw;
         String res;
-        char c;
         while (i < s.length()) {
             /*
          * Delimiters

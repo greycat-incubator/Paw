@@ -52,33 +52,34 @@ public class PawConstants {
     public final static String CACHING_ENODE_COUNT = "count";
     public final static String CACHING_ENODE_CONTENT = "content";
     public final static String CACHING_ENODE_WHEN_WHERE = "whenwhere";
-    public final static String INVERTED_INDEX_NODE_MAP = "map";
+    public final static String INVERTED_INDEX_NODE_LIST = "list";
     public final static String TOKENIZED_CONTENT_TOKENS = "tokens";
     public final static String EGRAPH_TOKEN_TYPE = "type";
     public final static String EGRAPH_TOKEN_MASK = "mask";
     public final static String EGRAPH_TOKEN_CONTENT = "content";
     public final static String EGRAPH_TOKEN_CACHE_SUB = "cache";
     public final static String EGRAPH_TOKEN_ID = "id";
-    public final static String EGRAPH_TOKEN_INVERTED_INDEX = "ii";
+    public final static String LOCALSTATIC_MAP = "lsmap";
+    public final static String LOCALSTATIC_DELIMITER = "delim";
+    public final static String LOCALSTATIC_CACHE = "cache";
+    public final static String LOCALSTATIC_NUMBER = "number";
     /**
      * Node Types
      */
     public final static int VOCABULARY_NODE = 0;
-    public final static int NUMBER_MAIN_NODE = 1;
-    public final static int TEXT_MAIN_NODE = 2;
-    public final static int CACHING_NODE = 3;
-    public final static int INDEXING_NODE = 4;
-    public final static int SUB_CACHING_NODE = 5;
-    public final static int TOKENIZED_CONTENT = 6;
-    public final static int LOCAL_STATISTIC = 7;
+    public final static int CACHING_NODE = 1;
+    public final static int INDEXING_NODE = 2;
+    public final static int SUB_CACHING_NODE = 3;
+    public final static int TOKENIZED_CONTENT = 4;
+    public final static int LOCAL_STATISTIC = 5;
     /**
      * Relation
      */
-    public final static String RELATION_INDEXED_VOCABULARY_CHILDREN = "childrens";
     public final static String RELATION_INDEXED_MAIN_NODES_CACHE_INDEX = "cacheIndex";
     public final static String RELATION_INDEXED_CACHE_TO_SUBCACHE = "subcaches";
     public final static String RELATION_INDEXED_NODE_TO_TOKENIZECONTENT = "tokenizedContents";
     public final static String RELATION_TOKENIZECONTENT_TO_NODE = "fatherNode";
+    public final static String RELATION_TOKENIZECONTENT_TO_LOCAL_STAT = "localStat";
 
 
 }

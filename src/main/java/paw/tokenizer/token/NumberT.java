@@ -20,7 +20,7 @@ public class NumberT implements Token {
         return PawConstants.NUMBER_TOKEN;
     }
 
-    public long getInteger() {
+    public long getLong() {
         return integer;
     }
 }
