@@ -36,6 +36,6 @@ public class Utils {
                 return false;
         }
         //size of long (javascript long are 53bits)
-        return str.length() < 16;
+        return str.length() < 10;
     }
 }

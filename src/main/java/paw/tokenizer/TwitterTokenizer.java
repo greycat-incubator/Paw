@@ -46,7 +46,7 @@ public class TwitterTokenizer extends AbstractTokenizer {
             s = sw.toString();
             if (s.length() != 0) {
                 if (Utils.isNumericArray(s) && !s.startsWith("0")) {
-                    long number = Long.parseLong(s);
+                    int number = Integer.parseInt(s);
                     tokens.add(new NumberT(number));
                 } else {
                     tokens.add(new ContentT(s));
@@ -87,7 +87,7 @@ public class TwitterTokenizer extends AbstractTokenizer {
             res = sw.toString();
             if (res.length() != 0) {
                 if (Utils.isNumericArray(res) && !res.startsWith("0")) {
-                    long number = Long.parseLong(res);
+                    int number = Integer.parseInt(res);
                     tokens.add(new NumberT(number));
                 } else {
                     tokens.add(new ContentT(res));

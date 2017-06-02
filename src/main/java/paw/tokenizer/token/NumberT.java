@@ -4,9 +4,9 @@ import paw.PawConstants;
 
 public class NumberT implements Token {
 
-    private final long integer;
+    private final int integer;
 
-    public NumberT(long integer) {
+    public NumberT(int integer) {
         this.integer = integer;
     }
 
@@ -20,7 +20,7 @@ public class NumberT implements Token {
         return PawConstants.NUMBER_TOKEN;
     }
 
-    public long getLong() {
+    public int getInt() {
         return integer;
     }
 }

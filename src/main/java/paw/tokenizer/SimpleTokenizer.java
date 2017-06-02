@@ -25,7 +25,7 @@ public class SimpleTokenizer extends AbstractTokenizer {
                 if (sw.length() > 0) {
                     String s = sw.toString();
                     if (Utils.isNumericArray(s) && !s.startsWith("0")) {
-                        long number = Long.parseLong(s);
+                        int number = Integer.parseInt(s);
                         tokens.add(new NumberT(number));
                     } else {
                         tokens.add(new ContentT(s));
@@ -37,7 +37,7 @@ public class SimpleTokenizer extends AbstractTokenizer {
         if (sw.length() != 0) {
             String s = sw.toString();
             if (Utils.isNumericArray(s) && !s.startsWith("0")) {
-                long number = Long.parseLong(s);
+                int number = Integer.parseInt(s);
                 tokens.add(new NumberT(number));
 
             } else {
@@ -59,7 +59,7 @@ public class SimpleTokenizer extends AbstractTokenizer {
                 if (sw.length() > 0) {
                     String res = sw.toString();
                     if (Utils.isNumericArray(res) && !res.startsWith("0")) {
-                        long number = Long.parseLong(res);
+                        int number = Integer.parseInt(res);
                         tokens.add(new NumberT(number));
                     } else {
                         tokens.add(new ContentT(res));
@@ -72,7 +72,7 @@ public class SimpleTokenizer extends AbstractTokenizer {
         if (sw.length() != 0) {
             String res = sw.toString();
             if (Utils.isNumericArray(res) && !res.startsWith("0")) {
-                long number = Long.parseLong(res);
+                int number = Integer.parseInt(res);
                 tokens.add(new NumberT(number));
 
             } else {

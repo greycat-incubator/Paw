@@ -27,7 +27,7 @@ public class PawConstants {
     /**
      * Threshold
      */
-    public final static int CACHE_THRESHOLD = 5;
+    public final static int CACHE_THRESHOLD = 10;
 
     /**
      * Tokenizer Type
@@ -45,6 +45,7 @@ public class PawConstants {
     public final static String NODE_TYPE = "Ntype";
     public final static String NODE_NAME = "Nname";
     public final static String CACHE_MAP_HASH_ID = "mapHashId";
+    public final static String CACHE_VOCAB = "vocabulary";
     //public final static String CACHE_EGRAPH = "egraph";
     public final static String RELATION_INDEX_ENTRY_POINT = "entryPoint";
     public final static String INDEXING_NODE_RADIX_TREE = "iradix";
@@ -52,7 +53,8 @@ public class PawConstants {
     public final static String CACHING_ENODE_COUNT = "count";
     public final static String CACHING_ENODE_CONTENT = "content";
     public final static String CACHING_ENODE_WHEN_WHERE = "whenwhere";
-    public final static String INVERTED_INDEX_NODE_LIST = "list";
+    //public final static String INVERTED_INDEX_NODE_LIST = "list";
+    public final static String DELIMITER_VOCABULARY = "delvocab";
     /**
      * public final static String TOKENIZED_CONTENT_TOKENS = "tokens";
      *
@@ -63,8 +65,8 @@ public class PawConstants {
      * public final static String EGRAPH_TOKEN_ID = "id";
      */
     public final static String TOKENIZED_CONTENT_TYPES = "types";
-    public final static String TOKENIZED_CONTENT_SUBS_DEL = "subsDEL";
-    public final static String TOKENIZED_CONTENT_IDS_NUMB = "idsNUMB";
+    public final static String TOKENIZED_CONTENT_SUB_ID = "subs";
+    public final static String TOKENIZED_CONTENT_HASH = "hash";
     public final static String TOKENIZED_CONTENT_MASKS = "masks";
     public final static String LOCALSTATIC_MAP = "lsmap";
     public final static String LOCALSTATIC_DELIMITER = "delim";
@@ -76,13 +78,14 @@ public class PawConstants {
     public final static int VOCABULARY_NODE = 0;
     public final static int CACHING_NODE = 1;
     public final static int INDEXING_NODE = 2;
-    public final static int SUB_CACHING_NODE = 3;
-    public final static int TOKENIZED_CONTENT = 4;
-    public final static int LOCAL_STATISTIC = 5;
+    public final static int DELIMITER_NODE = 3;
+    public final static int SUB_CACHING_NODE = 4;
+    public final static int TOKENIZED_CONTENT = 5;
+    public final static int LOCAL_STATISTIC = 6;
     /**
      * Relation
      */
-    public final static String RELATION_INDEXED_MAIN_NODES_CACHE_INDEX = "cacheIndex";
+    public final static String RELATION_VOCAB_CACHE_INDEX_DEL = "cacheIndex";
     public final static String RELATION_INDEXED_CACHE_TO_SUBCACHE = "subcaches";
     public final static String RELATION_INDEXED_NODE_TO_TOKENIZECONTENT = "tokenizedContents";
     public final static String RELATION_TOKENIZECONTENT_TO_NODE = "fatherNode";

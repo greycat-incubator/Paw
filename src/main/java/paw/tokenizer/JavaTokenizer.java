@@ -32,7 +32,7 @@ public class JavaTokenizer extends AbstractTokenizer {
                 JavaToken jt = l.get(i);
                 String res = jt.getText();
                 if (Utils.isNumericArray(res) && !res.startsWith("0")) {
-                    long number = Long.parseLong(res);
+                    int number = Integer.parseInt(res);
                     tokens.add(new NumberT(number));
                 } else {
                     tokens.add(new ContentT(res));

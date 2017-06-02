@@ -26,7 +26,7 @@ public class CPPTokenizer extends AbstractTokenizer {
         for (int i = 0; i < list.size(); i++) {
             String res = list.get(i).getText();
             if (Utils.isNumericArray(res) && !res.startsWith("0")) {
-                long number = Long.parseLong(res);
+                int number = Integer.parseInt(res);
                 tokens.add(new NumberT(number));
             } else {
                 tokens.add(new ContentT(res));

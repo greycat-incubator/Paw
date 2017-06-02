@@ -28,7 +28,7 @@ public class IdentityTokenizer extends AbstractTokenizer {
         List<Token> tokens = new ArrayList<>(1);
         if (s.length() != 0) {
             if (Utils.isNumericArray(s) && !s.startsWith("0")) {
-                long number = Long.parseLong(s);
+                int number = Integer.parseInt(s);
                 tokens.add(new NumberT(number));
                 return tokens;
 

@@ -54,7 +54,7 @@ public class VocabularyAccess {
         cachingNode.setTimeSensitivity(-1, 0);
         cachingNode.set(NODE_TYPE, Type.INT, CACHING_NODE);
         cachingNode.getOrCreate(RELATION_INDEXED_CACHE_TO_SUBCACHE, Type.RELATION_INDEXED);
-        vocabulary.addToRelation(RELATION_INDEXED_MAIN_NODES_CACHE_INDEX, cachingNode);
+        vocabulary.addToRelation(RELATION_VOCAB_CACHE_INDEX_DEL, cachingNode);
         cachingNode.free();
     }
 
@@ -68,10 +68,19 @@ public class VocabularyAccess {
         Node indexingNode = graph.newNode(0, BEGINNING_OF_TIME);
         indexingNode.setTimeSensitivity(-1, 0);
         indexingNode.set(NODE_TYPE, Type.INT, INDEXING_NODE);
-        vocabulary.addToRelation(RELATION_INDEXED_MAIN_NODES_CACHE_INDEX, indexingNode);
+        vocabulary.addToRelation(RELATION_VOCAB_CACHE_INDEX_DEL, indexingNode);
         indexingNode.getOrCreate(INDEXING_NODE_RADIX_TREE, Type.EGRAPH);
         indexingNode.getOrCreate(INDEXING_NODE_MAP_HASH_ID, Type.INT_TO_INT_MAP);
         indexingNode.free();
+    }
+
+    private static void createDelimiterVocabulary(Graph graph, Node vocabulary) {
+        Node delimiterVocab = graph.newNode(0, BEGINNING_OF_TIME);
+        delimiterVocab.setTimeSensitivity(-1, 0);
+        delimiterVocab.set(NODE_TYPE, Type.INT, DELIMITER_NODE);
+        vocabulary.addToRelation(RELATION_VOCAB_CACHE_INDEX_DEL, delimiterVocab);
+        delimiterVocab.getOrCreate(DELIMITER_VOCABULARY, Type.INT_TO_STRING_MAP);
+        delimiterVocab.free();
     }
 
     /**
@@ -84,7 +93,10 @@ public class VocabularyAccess {
         Node vocabulary = createVocabulary(graph);
         createCache(graph, vocabulary);
         createIndex(graph, vocabulary);
+        createDelimiterVocabulary(graph, vocabulary);
 
         return vocabulary;
     }
+
+
 }
