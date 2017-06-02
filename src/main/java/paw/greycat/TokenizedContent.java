@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static greycat.Constants.BEGINNING_OF_TIME;
+import static greycat.Tasks.newTask;
 import static paw.PawConstants.*;
 import static paw.greycat.VocabularyAccess.accessVocabulary;
 
@@ -67,7 +68,6 @@ public class TokenizedContent {
         }
     }
 
-
     private void getOrCreateTokenizeContentNode(String nameOfContent) {
         //check wether the content exist
         long[] result = ((RelationIndexed) father.getOrCreate(RELATION_INDEXED_NODE_TO_TOKENIZECONTENT, Type.RELATION_INDEXED)).select(NODE_NAME, nameOfContent);
@@ -88,7 +88,9 @@ public class TokenizedContent {
         Node tc = graph.newNode(currentWorld, currentTime);
         tc.set(NODE_NAME, Type.STRING, nameOfContent);
         tc.set(NODE_TYPE, Type.INT, TOKENIZED_CONTENT);
-        tc.getOrCreate(TOKENIZED_CONTENT_TOKENS, Type.EGRAPH);
+        tc.getOrCreate(TOKENIZED_CONTENT_TYPES, Type.INT_ARRAY);
+        tc.getOrCreate(TOKENIZED_CONTENT_SUBS_DEL, Type.STRING_ARRAY);
+        tc.getOrCreate(TOKENIZED_CONTENT_IDS_NUMB, Type.LONG_ARRAY);
         tc.addToRelation(RELATION_TOKENIZECONTENT_TO_NODE, father);
         father.addToRelation(RELATION_INDEXED_NODE_TO_TOKENIZECONTENT, tc, NODE_NAME);
         tokenizeContent = tc;
@@ -116,18 +118,22 @@ public class TokenizedContent {
     }
 
     private void addTokens(List<Token> tokens) {
-        EGraph tokensEgraph = tokenizeContent.getEGraph(TOKENIZED_CONTENT_TOKENS);
+        int size = tokens.size();
+        tokenizeContent.getIntArray(TOKENIZED_CONTENT_TYPES).init(size);
+        tokenizeContent.getStringArray(TOKENIZED_CONTENT_SUBS_DEL).init(size);
+        tokenizeContent.getLongArray(TOKENIZED_CONTENT_IDS_NUMB).init(size);
+        tokenizeContent.remove(TOKENIZED_CONTENT_MASKS);
         for (int i = 0; i < tokens.size(); i++) {
+            tokenizeContent.getStringArray(TOKENIZED_CONTENT_SUBS_DEL).set(i, "-");
             Token token = tokens.get(i);
-            ENode enode = tokensEgraph.newNode();
-            TokenHandler th = new TokenHandler(enode, token);
+            TokenHandler th = new TokenHandler(i, token);
             th.addTokenToTokenizeContent();
             th.free();
         }
     }
 
     class TokenHandler {
-        private final ENode tokenEnode;
+        private final int inc;
         private final Token tokenObject;
         private final String token;
         private final byte type;
@@ -136,25 +142,29 @@ public class TokenizedContent {
         private Node subCache = null;
 
 
-        private TokenHandler(ENode tokenEnode, Token token) {
-            this.tokenEnode = tokenEnode;
+        private TokenHandler(int inc, Token token) {
+            this.inc = inc;
             this.token = token.getToken();
             this.type = token.getType();
             this.tokenObject = token;
         }
 
         private void addTokenToTokenizeContent() {
-            tokenEnode.set(EGRAPH_TOKEN_TYPE, Type.INT, (int) type);
+            tokenizeContent.getIntArray(TOKENIZED_CONTENT_TYPES).set(inc, type);
             if (type == DELIMITER_TOKEN) {
-                tokenEnode.set(EGRAPH_TOKEN_CONTENT, Type.STRING, token);
+                tokenizeContent.getStringArray(TOKENIZED_CONTENT_SUBS_DEL).set(inc, token);
+
                 localStatistic.set(LOCALSTATIC_DELIMITER, Type.INT, (int) localStatistic.get(LOCALSTATIC_DELIMITER) + 1);
             } else {
                 if (type == NUMBER_TOKEN) {
-                    tokenEnode.set(EGRAPH_TOKEN_CONTENT, Type.LONG, ((NumberT) tokenObject).getLong());
+                    tokenizeContent.getLongArray(TOKENIZED_CONTENT_IDS_NUMB).set(inc, ((NumberT) tokenObject).getLong());
                     localStatistic.set(LOCALSTATIC_NUMBER, Type.INT, (int) localStatistic.get(LOCALSTATIC_NUMBER) + 1);
                 } else {
-                    IntArray mask = (IntArray) tokenEnode.getOrCreate(EGRAPH_TOKEN_MASK, Type.INT_ARRAY);
-                    mask.initWith(((ContentT) tokenObject).getLowerString().getMask());
+                    LongLongArrayMap masks = (LongLongArrayMap) tokenizeContent.getOrCreate(TOKENIZED_CONTENT_MASKS, Type.LONG_TO_LONG_ARRAY_MAP);
+                    int[] mask = ((ContentT) tokenObject).getLowerString().getMask();
+                    for (int i = 0; i < mask.length; i++) {
+                        masks.put(inc, mask[i]);
+                    }
                     hashToLookFor = HashHelper.hash(token);
                     addIndexableTokenToTokenizeContent();
                 }
@@ -182,7 +192,7 @@ public class TokenizedContent {
             //EGraph radix = index.getEGraph(INDEXING_NODE_RADIX_TREE);
             //ENode indexingENode = radix.node(indexEnode);
             //long ii = (long) indexingENode.get(EGRAPH_TOKEN_INVERTED_INDEX);
-            tokenEnode.set(EGRAPH_TOKEN_ID, Type.INT, indexEnode);
+            tokenizeContent.getLongArray(TOKENIZED_CONTENT_IDS_NUMB).set(inc, indexEnode);
             IntIntMap mapOfAppearance = localStatistic.getIntIntMap(LOCALSTATIC_MAP);
             int count = 1;
             int old = mapOfAppearance.get(indexEnode);
@@ -224,13 +234,14 @@ public class TokenizedContent {
                         subCache = result);
             }
 
-            IntIntMap map = subCache.getIntIntMap(CACHE_MAP_HASH_ID);
-            int entry = map.get(hashToLookFor);
+            LongLongArrayMap map = subCache.getLongLongArrayMap(CACHE_MAP_HASH_ID);
+            long[] data = map.get(hashToLookFor);
 
-            if (entry == Constants.NULL_INT) {
-                createCacheEntry();
+            if (data.length == 0 || data.length / 3 < CACHE_THRESHOLD - 1) {
+                createUpdateCacheEntry();
             } else {
-                updateCacheEntry(entry);
+                int enode = turnCacheIntoIndex(data);
+                updateTokenIndex(enode);
             }
         }
 
@@ -239,55 +250,20 @@ public class TokenizedContent {
             node.set(NODE_NAME, Type.STRING, subToken);
             node.set(NODE_TYPE, Type.INT, SUB_CACHING_NODE);
             node.setTimeSensitivity(-1, 0);
-            node.getOrCreate(CACHE_MAP_HASH_ID, Type.INT_TO_INT_MAP);
-            node.getOrCreate(CACHE_EGRAPH, Type.EGRAPH);
+            node.getOrCreate(CACHE_MAP_HASH_ID, Type.LONG_TO_LONG_ARRAY_MAP);
             subCache = node;
         }
 
-        private void createCacheEntry() {
-            EGraph egraph = subCache.getEGraph(CACHE_EGRAPH);
-            IntIntMap map = subCache.getIntIntMap(CACHE_MAP_HASH_ID);
-
-            ENode entry = egraph.newNode();
-            entry.set(CACHING_ENODE_COUNT, Type.INT, 1);
-
-            LongArray longArray = (LongArray) entry.getOrCreate(CACHING_ENODE_WHEN_WHERE, Type.LONG_ARRAY);
-            longArray.initWith(new long[]{currentWorld, currentTime, tokenizeContent.id()});
-
-            entry.set(CACHING_ENODE_CONTENT, Type.STRING, token);
-
-            map.put(hashToLookFor, entry.id());
-
-            tokenEnode.set(EGRAPH_TOKEN_CACHE_SUB, Type.STRING, subToken);
-            tokenEnode.set(EGRAPH_TOKEN_ID, Type.INT, hashToLookFor);
+        private void createUpdateCacheEntry() {
+            LongLongArrayMap map = subCache.getLongLongArrayMap(CACHE_MAP_HASH_ID);
+            map.putNoCheck(hashToLookFor, currentWorld);
+            map.putNoCheck(hashToLookFor, currentTime);
+            map.putNoCheck(hashToLookFor, tokenizeContent.id());
+            tokenizeContent.getStringArray(TOKENIZED_CONTENT_SUBS_DEL).set(inc, token);
             localStatistic.set(LOCALSTATIC_CACHE, Type.INT, (int) localStatistic.get(LOCALSTATIC_CACHE) + 1);
         }
 
-        private void updateCacheEntry(int cacheEntryId) {
-            EGraph egraph = subCache.getEGraph(CACHE_EGRAPH);
-            ENode cacheEntry = egraph.node(cacheEntryId);
-
-            int count = (int) cacheEntry.get(CACHING_ENODE_COUNT);
-
-            if (count != CACHE_THRESHOLD - 1) {
-                cacheEntry.set(CACHING_ENODE_COUNT, Type.INT, count + 1);
-                LongArray longArray = cacheEntry.getLongArray(CACHING_ENODE_WHEN_WHERE);
-                longArray.addAll(new long[]{currentWorld, currentTime, tokenizeContent.id()});
-
-                tokenEnode.set(EGRAPH_TOKEN_CACHE_SUB, Type.STRING, subToken);
-                tokenEnode.set(EGRAPH_TOKEN_ID, Type.INT, hashToLookFor);
-                localStatistic.set(LOCALSTATIC_CACHE, Type.INT, (int) localStatistic.get(LOCALSTATIC_CACHE) + 1);
-            } else {
-                int enode = turnCacheIntoIndex(cacheEntryId);
-                updateTokenIndex(enode);
-            }
-        }
-
-        private int turnCacheIntoIndex(int cacheEntryId) {
-            IntIntMap mapOfCache = subCache.getIntIntMap(CACHE_MAP_HASH_ID);
-            EGraph egraphCache = subCache.getEGraph(CACHE_EGRAPH);
-            ENode cacheEntry = egraphCache.node(cacheEntryId);
-
+        private int turnCacheIntoIndex(long[] data) {
 
             IntIntMap mapIndex = index.getIntIntMap(INDEXING_NODE_MAP_HASH_ID);
             EGraph radix = index.getEGraph(INDEXING_NODE_RADIX_TREE);
@@ -297,23 +273,17 @@ public class TokenizedContent {
 
             mapIndex.put(hashToLookFor, radixId);
 
-            createInvertedIndexEntry(cacheEntryId, radixId);
-            ENode replacementENode = egraphCache.node(mapOfCache.size() - 1);
-            if (replacementENode.id() != cacheEntry.id()) {
-                mapOfCache.each((key, value) -> {
-                    if (value == replacementENode.id()) {
-                        mapOfCache.put(key, cacheEntry.id());
-                    }
-                });
+            createInvertedIndexEntry(data, radixId);
+
+            LongLongArrayMap map = subCache.getLongLongArrayMap(CACHE_MAP_HASH_ID);
+            for (int i = 0; i < data.length; i++) {
+                map.delete(hashToLookFor, data[i]);
             }
-            mapOfCache.remove(hashToLookFor);
-            egraphCache.drop(cacheEntry);
             return radixId;
         }
 
-        private void createInvertedIndexEntry(int cacheEntryId, int radixId) {
-            EGraph egraphCache = subCache.getEGraph(CACHE_EGRAPH);
-            ENode cacheEntry = egraphCache.node(cacheEntryId);
+        private void createInvertedIndexEntry(long[] data, int radixId) {
+
 
             //Node[] node = {graph.newNode(0, BEGINNING_OF_TIME)};
             //radixEntry.set(EGRAPH_TOKEN_INVERTED_INDEX, Type.LONG, node[0].id());
@@ -321,61 +291,68 @@ public class TokenizedContent {
             //node[0].setTimeSensitivity(-1, 0);
             //node[0].set(NODE_TYPE, Type.INT, INVERTED_INDEX);
             //LongArray nodesList = (LongArray) node[0].getOrCreate(INVERTED_INDEX_NODE_LIST, Type.LONG_ARRAY);
-            LongArray whenwhere = cacheEntry.getLongArray(CACHING_ENODE_WHEN_WHERE);
-            for (int i = 0; i < whenwhere.size(); i += 3) {
-                long idNode = whenwhere.get(i + 2);
-                long time = whenwhere.get(i + 1);
-                long world = whenwhere.get(i);
+            long[] worlds = new long[data.length / 3];
+            long[] times = new long[data.length / 3];
+            long[] idNodes = new long[data.length / 3];
+            for (int i = 0; i < data.length; i += 3) {
+                idNodes[i / 3] = data[i];
+                times[i / 3] = data[i + 1];
+                worlds[i / 3] = data[i + 2];
                 //iDs[i] = time;
-                updateEToken(idNode, time, world, radixId);
+
             }
+            updateEToken(idNodes, times, worlds, radixId);
             //Arrays.sort(iDs);
             //nodesList.addAll(iDs);
         }
 
-        private void updateEToken(long idNode, long time, long world, int newId) {
-            graph.lookup(world, time, idNode, result -> {
-                EGraph tokens = result.getEGraph(TOKENIZED_CONTENT_TOKENS);
-                for (int i = 0; i < tokens.size(); i++) {
-                    ENode etoken = tokens.node(i);
-                    String sub = (String) etoken.get(EGRAPH_TOKEN_CACHE_SUB);
-                    if(sub!=null && sub.equals(subToken)){
-                        int hash = (int) etoken.get(EGRAPH_TOKEN_ID);
-                        if(hash == hashToLookFor){
-                            etoken.remove(EGRAPH_TOKEN_CACHE_SUB);
-                            etoken.set(EGRAPH_TOKEN_ID, Type.INT, newId);
-                            break;
+        private void updateEToken(long[] idNodes, long[] times, long[] worlds, int newId) {
+            graph.lookupBatch(worlds, times, idNodes, result -> {
+                for (int i = 0; i < result.length; i++) {
+                    int[] types = result[i].getIntArray(TOKENIZED_CONTENT_TYPES).extract();
+                    for (int j = 0; j < types.length; j++) {
+                        if (types[j] == CONTENT_TOKEN) {
+                            String sub = result[i].getStringArray(TOKENIZED_CONTENT_SUBS_DEL).get(j);
+                            if (sub.equals(token)) {
+                                result[i].getStringArray(TOKENIZED_CONTENT_SUBS_DEL).set(j, "-");
+                                result[i].getLongArray(TOKENIZED_CONTENT_IDS_NUMB).set(j, newId);
+                                break;
+                            }
                         }
                     }
+                    result[i].relation(RELATION_TOKENIZECONTENT_TO_LOCAL_STAT, ls -> {
+                        ls[0].set(LOCALSTATIC_CACHE, Type.INT, (int) ls[0].get(LOCALSTATIC_CACHE) - 1);
+                        IntIntMap mapOfAppearance = ls[0].getIntIntMap(LOCALSTATIC_MAP);
+                        int count = 1;
+                        int old = mapOfAppearance.get(newId);
+                        if (old != Constants.NULL_INT) {
+                            count += old;
+                        }
+                        mapOfAppearance.put(newId, count);
+                        ls[0].free();
+                    });
+                    result[i].free();
                 }
-                result.relation(RELATION_TOKENIZECONTENT_TO_LOCAL_STAT, ls -> {
-                    ls[0].set(LOCALSTATIC_CACHE, Type.INT, (int) ls[0].get(LOCALSTATIC_CACHE) - 1);
-                    IntIntMap mapOfAppearance = ls[0].getIntIntMap(LOCALSTATIC_MAP);
-                    int count = 1;
-                    int old = mapOfAppearance.get(newId);
-                    if (old != Constants.NULL_INT) {
-                        count += old;
-                    }
-                    mapOfAppearance.put(newId, count);
-                    ls[0].free();
-                    result.free();
-                });
+
             });
         }
 
     }
 
     public static Task updateOrCreateTokenizeContent(List<Token> tokens, String nameOfContent, String fatherNodeVar) {
-        return accessVocabulary()
-                //Retrieving for both their cache and index node
-                .traverse(RELATION_INDEXED_MAIN_NODES_CACHE_INDEX)
+        return newTask()
+                .ifThen(ctx -> ctx.variable("vocabNodes") == null,
+                        accessVocabulary()
+                                //Retrieving for both their cache and index node
+                                .traverse(RELATION_INDEXED_MAIN_NODES_CACHE_INDEX)
+                                .defineAsGlobalVar("vocabNodes")
+                )
                 .thenDo(ctx -> {
                     long currentWorld = ctx.world();
                     long currentTime = ctx.time();
                     Graph graph = ctx.graph();
-                    Node cache = ctx.resultAsNodes().get(0);
-                    Node index = ctx.resultAsNodes().get(1);
-
+                    Node cache = (Node) ctx.variable("vocabNodes").get(0);
+                    Node index = (Node) ctx.variable("vocabNodes").get(1);
 
                     TokenizedContent tc = new TokenizedContent(graph, currentWorld, currentTime, index, cache);
 
@@ -388,7 +365,7 @@ public class TokenizedContent {
                     tc.addTokens(tokens);
                     tc.free();
                     //Add each token to the tokenized content node
-                    ctx.continueWith(ctx.newResult());
+                    ctx.continueTask();
                 });
     }
 

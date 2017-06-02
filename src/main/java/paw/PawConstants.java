@@ -45,7 +45,7 @@ public class PawConstants {
     public final static String NODE_TYPE = "Ntype";
     public final static String NODE_NAME = "Nname";
     public final static String CACHE_MAP_HASH_ID = "mapHashId";
-    public final static String CACHE_EGRAPH = "egraph";
+    //public final static String CACHE_EGRAPH = "egraph";
     public final static String RELATION_INDEX_ENTRY_POINT = "entryPoint";
     public final static String INDEXING_NODE_RADIX_TREE = "iradix";
     public final static String INDEXING_NODE_MAP_HASH_ID = "mapHashId";
@@ -53,12 +53,19 @@ public class PawConstants {
     public final static String CACHING_ENODE_CONTENT = "content";
     public final static String CACHING_ENODE_WHEN_WHERE = "whenwhere";
     public final static String INVERTED_INDEX_NODE_LIST = "list";
-    public final static String TOKENIZED_CONTENT_TOKENS = "tokens";
-    public final static String EGRAPH_TOKEN_TYPE = "type";
-    public final static String EGRAPH_TOKEN_MASK = "mask";
-    public final static String EGRAPH_TOKEN_CONTENT = "content";
-    public final static String EGRAPH_TOKEN_CACHE_SUB = "cache";
-    public final static String EGRAPH_TOKEN_ID = "id";
+    /**
+     * public final static String TOKENIZED_CONTENT_TOKENS = "tokens";
+     *
+     * public final static String EGRAPH_TOKEN_TYPE = "type";
+     * public final static String EGRAPH_TOKEN_MASK = "mask";
+     * public final static String EGRAPH_TOKEN_CONTENT = "content";
+     * public final static String EGRAPH_TOKEN_CACHE_SUB = "cache";
+     * public final static String EGRAPH_TOKEN_ID = "id";
+     */
+    public final static String TOKENIZED_CONTENT_TYPES = "types";
+    public final static String TOKENIZED_CONTENT_SUBS_DEL = "subsDEL";
+    public final static String TOKENIZED_CONTENT_IDS_NUMB = "idsNUMB";
+    public final static String TOKENIZED_CONTENT_MASKS = "masks";
     public final static String LOCALSTATIC_MAP = "lsmap";
     public final static String LOCALSTATIC_DELIMITER = "delim";
     public final static String LOCALSTATIC_CACHE = "cache";
