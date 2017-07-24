@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package paw.greycat.struct.radix;
+package paw.graph.customType.radix.struct;
 
-import greycat.struct.ENode;
+import greycat.struct.EStruct;
 
 class SearchResult {
     final CharSequence key;
-    final ENode nodeFound;
+    final EStruct nodeFound;
     final int charsMatched;
     final int charsMatchedInNodeFound;
-    final ENode parentNode;
-    final ENode parentNodesParent;
+    final EStruct parentNode;
+    final EStruct parentNodesParent;
     final Classification classification;
 
     enum Classification {
@@ -33,7 +33,7 @@ class SearchResult {
         KEY_ENDS_MID_EDGE,
     }
 
-    SearchResult(CharSequence key, ENode nodeFound, int charsMatched, int charsMatchedInNodeFound, ENode parentNode, ENode parentNodesParent) {
+    SearchResult(CharSequence key, EStruct nodeFound, int charsMatched, int charsMatchedInNodeFound, EStruct parentNode, EStruct parentNodesParent) {
         this.key = key;
         this.nodeFound = nodeFound;
         this.charsMatched = charsMatched;
@@ -45,7 +45,7 @@ class SearchResult {
         this.classification = classify(key, nodeFound, charsMatched, charsMatchedInNodeFound);
     }
 
-    protected Classification classify(CharSequence key, ENode nodeFound, int charsMatched, int charsMatchedInNodeFound) {
+    protected Classification classify(CharSequence key, EStruct nodeFound, int charsMatched, int charsMatchedInNodeFound) {
         if (charsMatched == key.length()) {
             if (charsMatchedInNodeFound == ((String) nodeFound.get(RadixTree.NODE_ADDITION)).length()) {
                 return Classification.EXACT_MATCH;
