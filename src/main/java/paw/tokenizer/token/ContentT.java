@@ -11,6 +11,10 @@ public class ContentT implements Token {
         this.content = new LowerString(content);
     }
 
+    public ContentT(LowerString content) {
+        this.content = content;
+    }
+
     @Override
     public String getToken() {
         return content.getContent();

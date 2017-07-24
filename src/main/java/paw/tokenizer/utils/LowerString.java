@@ -27,6 +27,11 @@ public class LowerString {
         content = sb.toString();
     }
 
+    public LowerString(String s, int[] mask) {
+        this.mask = mask;
+        this.content = s;
+    }
+
     public String rebuild() {
         StringBuilder sb = new StringBuilder(content.length());
         int offset = 0;

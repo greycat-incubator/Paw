@@ -37,7 +37,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <greycat.version>8-SNAPSHOT</greycat.version>
+        <greycat.version>10-SNAPSHOT</greycat.version>
         <header.path>${basedir}/HEADER</header.path>
     </properties>
 
@@ -62,11 +62,6 @@
             <version>${greycat.version}</version>
         </dependency>
         <dependency>
-            <groupId>lu.jimenez.research</groupId>
-            <artifactId>my-little-plugin</artifactId>
-            <version>${greycat.version}</version>
-        </dependency>
-        <dependency>
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-core</artifactId>
             <version>RELEASE</version>
@@ -88,6 +83,11 @@
                     <artifactId>junit</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.roaringbitmap</groupId>
+            <artifactId>RoaringBitmap</artifactId>
+            <version>0.6.41</version>
         </dependency>
         <dependency>
             <groupId>org.antlr</groupId>
