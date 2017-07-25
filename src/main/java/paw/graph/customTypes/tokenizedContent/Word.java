@@ -28,4 +28,5 @@ public class Word {
     public int getFirstChar() {
         return firstChar;
     }
+
 }

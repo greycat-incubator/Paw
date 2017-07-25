@@ -149,7 +149,6 @@ public class TokenizeContentNode extends BaseNode {
 
     public final TokenizeContentNode setContent(List<Token> tokens) {
         this.rephase();
-        this.cacheLock();
         TokenizeContentNode tcn = this;
         CTTCRoaring roaring = (CTTCRoaring) getOrCreateCustomAt(INTERNAL_ENCODED_TEXT_H, CTTCRoaring.NAME);
         roaring.clear();
@@ -206,7 +205,6 @@ public class TokenizeContentNode extends BaseNode {
         delimiterVocabularyNodes[0].free();
         categoryNodes[0].free();
         roaring.save();
-        this.cacheUnlock();
         return this;
     }
 
@@ -234,19 +232,19 @@ public class TokenizeContentNode extends BaseNode {
         }
     }
 
-    public static void getOrCreateTokenizeContentOfNode(Graph graph, long world, long time, Node relatedNode, String name, String category, Callback<TokenizeContentNode> callback) {
+    public static void getOrCreateTokenizeContentOfNode(Node relatedNode, String name, String category, Callback<TokenizeContentNode> callback) {
         getTokenizeContentOfNode(relatedNode, name, new Callback<TokenizeContentNode>() {
             @Override
             public void on(TokenizeContentNode result) {
                 if (result != null) {
                     callback.on(result);
                 } else {
-                    TokenizeContentNode node = (TokenizeContentNode) graph.newTypedNode(world, time, NAME);
+                    TokenizeContentNode node = (TokenizeContentNode) relatedNode.graph().newTypedNode(relatedNode.world(), relatedNode.time(), NAME);
                     node.initNode(relatedNode, category, name, tcn -> {
                         Index index = (Index) relatedNode.getAt(TOKENIZED_CONTENT_INDEX_H);
                         if (index == null) {
                             Index finalIndex = (Index) relatedNode.getOrCreateAt(TOKENIZED_CONTENT_INDEX_H, Type.INDEX);
-                            index.declareAttributes(result1 -> {
+                            finalIndex.declareAttributes(result1 -> {
                                 finalIndex.update(node);
                                 callback.on(node);
                             }, TOKENIZE_CONTENT_NAME);

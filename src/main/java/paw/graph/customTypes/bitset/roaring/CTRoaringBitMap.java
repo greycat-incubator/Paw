@@ -32,7 +32,7 @@ public class CTRoaringBitMap extends CTBitset {
             root = backend.newEStruct();
             backend.setRoot(root);
         }
-        gBits = (String) root.getOrCreateAt(BITS_H, Type.STRING);
+        gBits = (String) root.getAt(BITS_H);
         if (gBits != null) {
             ByteBuffer newbb = ByteBuffer.wrap(Base64.getDecoder().decode(gBits));
             bitmap = new ImmutableRoaringBitmap(newbb).toRoaringBitmap();

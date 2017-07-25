@@ -40,14 +40,12 @@ public class TCListNode extends BaseNode {
      * @param nodeId
      */
     protected final int addTokenizeContentID(long nodeId) {
-        this.cacheLock();
         LongSet longSet = (LongSet) getAt(TC_LIST_H);
         int result = longSet.index(nodeId);
         if (result == -1) {
             result = longSet.size();
             longSet.put(nodeId);
         }
-        this.cacheUnlock();
         return result;
     }
 

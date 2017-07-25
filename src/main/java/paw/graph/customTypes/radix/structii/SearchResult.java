@@ -16,6 +16,7 @@
 package paw.graph.customTypes.radix.structii;
 
 import greycat.struct.EStruct;
+import paw.graph.customTypes.radix.struct.RadixTree;
 
 class SearchResult {
     final CharSequence key;

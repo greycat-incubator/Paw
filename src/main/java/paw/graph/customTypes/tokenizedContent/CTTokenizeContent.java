@@ -9,7 +9,7 @@ import java.util.List;
 
 public class CTTokenizeContent {
 
-    private static int[] SIZE_CODING_FC = new int[]{5, 6, 16, 32};
+    private static int[] SIZE_CODING_FC = new int[]{7, 8, 16, 32};
     private static int[] SIZE_CODING_CONTENT = new int[]{8, 16, 24, 32};
 
     private static int encodingSize(int toEncode, CTBitset bitset, int currentStop, int[] encodingArraySize) {
@@ -39,10 +39,12 @@ public class CTTokenizeContent {
     }
 
     private static void encoding(int iterationMax, int toEncode, CTBitset bitset, int currentStop) {
+        int stop = currentStop;
         for (int i = iterationMax - 1; i >= 0; i--) {
             if ((toEncode & 1 << i) != 0) {
-                bitset.add(currentStop);
+                bitset.add(stop);
             }
+            stop++;
         }
     }
 
@@ -62,14 +64,14 @@ public class CTTokenizeContent {
                 case (TYPE_ENCODING):
                     switch (word.type) {
                         case PawConstants.NUMBER_TOKEN:
-                            bitset.add(newStop);
-                        case PawConstants.DELIMITER_TOKEN:
                             bitset.add(newStop + 1);
+                        case PawConstants.DELIMITER_TOKEN:
+                            bitset.add(newStop);
                             newStop += 2;
                             state = CONTENT_SIZE_ENCODING;
                             break;
                         case PawConstants.CONTENT_TOKEN:
-                            currentStop++;
+                            newStop++;
                             state = FIRST_CHAR_SIZE_ENCODING;
                             break;
                     }

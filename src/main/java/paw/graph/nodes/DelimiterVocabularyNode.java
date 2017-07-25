@@ -54,14 +54,11 @@ public class DelimiterVocabularyNode extends BaseNode {
      * @return true if inserted false if already present
      */
     public boolean addDelimiter(int hash, String delimiter) {
-        this.cacheLock();
         IntStringMap map = (IntStringMap) getAt(DELIMITER_MAP_H);
-        if (!map.get(hash).equals(delimiter)) {
+        if (!delimiter.equals(map.get(hash))) {
             map.put(hash, delimiter);
-            this.cacheUnlock();
             return true;
         } else {
-            this.cacheUnlock();
             return false;
         }
     }

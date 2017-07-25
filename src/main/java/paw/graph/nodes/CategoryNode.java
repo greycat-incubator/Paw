@@ -71,12 +71,7 @@ public class CategoryNode extends BaseNode {
             index.update(vocabularyNode);
             callback.on(vocabularyNode);
         } else {
-            _graph.lookup(0, BEGINNING_OF_TIME, vocId[0], new Callback<Node>() {
-                @Override
-                public void on(Node result) {
-                    callback.on((VocabularyNode) result);
-                }
-            });
+            _graph.lookup(0, BEGINNING_OF_TIME, vocId[0], result -> callback.on((VocabularyNode) result));
         }
     }
 
@@ -86,13 +81,10 @@ public class CategoryNode extends BaseNode {
      * @param callback in which the node will be returned
      */
     public final void getDelimiterVocabularyNode(Callback<DelimiterVocabularyNode> callback) {
-        traverseAt(DELIMITER_VOCABULARY_RELATION_H, new Callback<Node[]>() {
-            @Override
-            public void on(Node[] result) {
-                if (result.length > 0) {
-                    callback.on((DelimiterVocabularyNode) result[0]);
-                } else throw new RuntimeException("Category Node was not initialized or is not a category Node");
-            }
+        traverseAt(DELIMITER_VOCABULARY_RELATION_H, (Callback<Node[]>) result -> {
+            if (result.length > 0) {
+                callback.on((DelimiterVocabularyNode) result[0]);
+            } else throw new RuntimeException("Category Node was not initialized or is not a category Node");
         });
 
     }
@@ -102,21 +94,28 @@ public class CategoryNode extends BaseNode {
      *
      * @param category name of the category
      */
-    private void initCategory(String category) {
+    private void initCategory(String category, NodeIndex indexfather, Callback<CategoryNode> callback) {
         set(CATEGORY, Type.STRING, category);
         this.setTimeSensitivity(-1, 0);
+        indexfather.update(this);
+        indexfather.free();
 
         TCListNode tcListNode = (TCListNode) _graph.newTypedNode(0, BEGINNING_OF_TIME, TCListNode.NAME);
         tcListNode.initNode();
         addToRelationAt(TC_LIST_RELATION_H, tcListNode);
         tcListNode.free();
 
-        getOrCreateAt(VOCABULARY_RELATION_H, Type.INDEX);
-
         DelimiterVocabularyNode delimiterVocabularyNode = (DelimiterVocabularyNode) _graph.newTypedNode(0, BEGINNING_OF_TIME, DelimiterVocabularyNode.NAME);
         delimiterVocabularyNode.initNode();
         addToRelationAt(DELIMITER_VOCABULARY_RELATION_H, delimiterVocabularyNode);
         delimiterVocabularyNode.free();
+
+        CategoryNode categoryNode = this;
+
+        Index index = (Index) getOrCreateAt(VOCABULARY_RELATION_H, Type.INDEX);
+        index.declareAttributes(result -> {
+            callback.on(categoryNode);
+        }, VocabularyNode.FIRST_CHAR);
     }
 
     /**
@@ -127,26 +126,19 @@ public class CategoryNode extends BaseNode {
      * @param callback in which the node will be returned
      */
     public final static void getOrCreateCategoryNode(Graph graph, String category, Callback<CategoryNode> callback) {
-        graph.declareIndex(0, INDEX_CATEGORY, new Callback<NodeIndex>() {
-            @Override
-            public void on(NodeIndex index) {
-                index.findFrom(new Callback<Node[]>() {
-                                   @Override
-                                   public void on(Node[] result) {
-                                       CategoryNode categoryNode;
-                                       if (result.length != 0) {
-                                           categoryNode = (CategoryNode) result[0];
-                                       } else {
-                                           categoryNode = (CategoryNode) graph.newTypedNode(0, BEGINNING_OF_TIME, CategoryNode.NAME);
-                                           categoryNode.initCategory(category);
-                                           index.update(categoryNode);
-                                       }
-                                       index.free();
-                                       callback.on(categoryNode);
-                                   }
-                               },
-                        category);
-            }
-        }, CATEGORY);
+        graph.declareIndex(0, INDEX_CATEGORY,
+                index -> index.findFrom(
+                        result -> {
+                            CategoryNode categoryNode;
+                            if (result.length != 0) {
+                                categoryNode = (CategoryNode) result[0];
+                                index.free();
+                                callback.on(categoryNode);
+                            } else {
+                                categoryNode = (CategoryNode) graph.newTypedNode(0, BEGINNING_OF_TIME, CategoryNode.NAME);
+                                categoryNode.initCategory(category, index, callback);
+                            }
+                        },
+                        category), CATEGORY);
     }
 }

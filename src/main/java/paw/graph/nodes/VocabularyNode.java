@@ -41,7 +41,7 @@ public class VocabularyNode extends BaseNode {
      * @param firstChar first character of all words that will be present in the vocabulary
      */
     public final void initVocNode(char firstChar) {
-        setAt(FIRST_CHAR_H, Type.STRING, firstChar);
+        setAt(FIRST_CHAR_H, Type.STRING, String.valueOf(firstChar));
         setTimeSensitivity(-1, 0);
         getOrCreateAt(MAPOFWORD_H, Type.INT_TO_INT_MAP);
         getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
@@ -75,7 +75,6 @@ public class VocabularyNode extends BaseNode {
      * @return the position of the word in the radix tree.
      */
     public final int getOrCreateWordForTC(String word, int tcId) {
-        this.cacheLock();
         int hash = HashHelper.hash(word);
         int result = getWord(hash);
         RadixTreeWithII radixTreeWithII = (RadixTreeWithII) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
@@ -86,7 +85,6 @@ public class VocabularyNode extends BaseNode {
         } else {
             radixTreeWithII.addIDToNode(result, tcId);
         }
-        this.cacheUnlock();
         return result;
     }
 

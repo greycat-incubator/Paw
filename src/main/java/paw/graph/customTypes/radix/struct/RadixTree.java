@@ -405,7 +405,7 @@ public class RadixTree extends BaseCustomType {
         }
     }
 
-    protected static String NODE_ADDITION = "incoming";
+    public static String NODE_ADDITION = "incoming";
     private static String NODE_PARENT = "father";
     private static String NODE_CHILD = "children";
     private static String NODE_REAL_WORD = "real";
