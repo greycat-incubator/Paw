@@ -50,7 +50,7 @@ if($val.text.compareTo("0")!=0) throw new InputMismatchException(this);
  ******************************************************************************/
 grammar CPP14;
 @header{
-package paw.tokeniser.tokenisation.pl.cpp
+package paw.old.tokeniser.tokenisation.pl.cpp
 }
 /*Basic concepts*/
 translationunit
