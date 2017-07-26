@@ -20,7 +20,7 @@ public class CTRoaringBitMap extends CTBitset {
 
     private static final String BITS = "bits";
     private static final int BITS_H = HashHelper.hash(BITS);
-    public static final String NAME = "RoaringBitMap" ;
+    public static final String NAME = "RoaringBitMap";
     private String gBits;
     protected RoaringBitmap bitmap;
     protected EStruct root;
@@ -99,7 +99,9 @@ public class CTRoaringBitMap extends CTBitset {
     }
 
     @Override
-    public void clear(int index) {bitmap.checkedRemove(index);}
+    public void clear(int index) {
+        bitmap.checkedRemove(index);
+    }
 
     @Override
     public int size() {
@@ -124,5 +126,7 @@ public class CTRoaringBitMap extends CTBitset {
     }
 
     @Override
-    public IntIterator iterator() {return bitmap.getIntIterator();}
+    public IntIterator iterator() {
+        return bitmap.getIntIterator();
+    }
 }

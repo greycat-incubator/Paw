@@ -8,10 +8,15 @@ import greycat.plugin.TypeFactory;
 import greycat.struct.EStructArray;
 import paw.graph.customTypes.bitset.fastbitset.CTFastBitSet;
 import paw.graph.customTypes.bitset.roaring.CTRoaringBitMap;
-import paw.graph.customTypes.radix.structii.RadixTreeWithII;
+import paw.graph.customTypes.radix.struct.RadixTree;
 import paw.graph.customTypes.tokenizedContent.CTTCBitset;
 import paw.graph.customTypes.tokenizedContent.CTTCRoaring;
-import paw.graph.nodes.*;
+import paw.graph.nodes.CategoryNode;
+import paw.graph.nodes.TokenizeContentNode;
+import paw.graph.nodes.VocabularyNode;
+
+import static paw.PawConstants.INDEX_CATEGORY;
+import static paw.graph.nodes.TokenizeContentNode.CATEGORY;
 
 public class PawPlugin implements Plugin {
     @Override
@@ -22,24 +27,6 @@ public class PawPlugin implements Plugin {
                     @Override
                     public Node create(long world, long time, long id, Graph graph) {
                         return new CategoryNode(world, time, id, graph);
-                    }
-                });
-
-        graph.nodeRegistry()
-                .getOrCreateDeclaration(DelimiterVocabularyNode.NAME)
-                .setFactory(new NodeFactory() {
-                    @Override
-                    public Node create(long world, long time, long id, Graph graph) {
-                        return new DelimiterVocabularyNode(world, time, id, graph);
-                    }
-                });
-
-        graph.nodeRegistry()
-                .getOrCreateDeclaration(TCListNode.NAME)
-                .setFactory(new NodeFactory() {
-                    @Override
-                    public Node create(long world, long time, long id, Graph graph) {
-                        return new TCListNode(world, time, id, graph);
                     }
                 });
 
@@ -77,11 +64,11 @@ public class PawPlugin implements Plugin {
                     }
                 });
         graph.typeRegistry()
-                .getOrCreateDeclaration(RadixTreeWithII.NAME)
+                .getOrCreateDeclaration(RadixTree.NAME)
                 .setFactory(new TypeFactory() {
                     @Override
                     public Object wrap(final EStructArray backend) {
-                        return new RadixTreeWithII(backend);
+                        return new RadixTree(backend);
                     }
                 });
         graph.typeRegistry()
@@ -100,6 +87,14 @@ public class PawPlugin implements Plugin {
                         return new CTTCRoaring(backend);
                     }
                 });
+
+
+        graph.addConnectHook(result ->
+                graph.declareIndex(0, INDEX_CATEGORY, index -> {
+                    index.free();
+                    result.on(true);
+                }, CATEGORY));
+
     }
 
     @Override

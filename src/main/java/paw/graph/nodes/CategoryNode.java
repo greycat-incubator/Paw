@@ -2,6 +2,8 @@ package paw.graph.nodes;
 
 import greycat.*;
 import greycat.base.BaseNode;
+import greycat.struct.IntStringMap;
+import greycat.struct.Relation;
 import greycat.utility.HashHelper;
 
 import static greycat.Constants.BEGINNING_OF_TIME;
@@ -18,11 +20,11 @@ public class CategoryNode extends BaseNode {
     public final static String VOCABULARY_RELATION = "vocabulary";
     private final static int VOCABULARY_RELATION_H = HashHelper.hash(VOCABULARY_RELATION);
 
-    public final static String DELIMITER_VOCABULARY_RELATION = "delimiterVoc";
-    private final static int DELIMITER_VOCABULARY_RELATION_H = HashHelper.hash(DELIMITER_VOCABULARY_RELATION);
+    public final static String TC_LIST = "List";
+    private final static int TC_LIST_H = HashHelper.hash(TC_LIST);
 
-    public final static String TC_LIST_RELATION = "tcList";
-    private final static int TC_LIST_RELATION_H = HashHelper.hash(TC_LIST_RELATION);
+    public final static String DELIMITER_MAP = "delimiterMap";
+    private final static int DELIMITER_MAP_H = HashHelper.hash(DELIMITER_MAP);
 
     /**
      * Constructor
@@ -43,17 +45,12 @@ public class CategoryNode extends BaseNode {
         return (String) getAt(CATEGORY_H);
     }
 
-    /**
-     * return in a CallBack the node containing the list of all tokenize content belonging to the category
-     *
-     * @param callback in which the node will be returned
-     */
-    public final void getTokenizeContentListNode(Callback<TCListNode> callback) {
-        traverseAt(TC_LIST_RELATION_H, (Callback<Node[]>) result -> {
-            if (result.length > 0) {
-                callback.on((TCListNode) result[0]);
-            } else throw new RuntimeException("Category Node was not initialized or is not a category Node");
-        });
+    public final long[] getTokenizeContentList() {
+        return ((Relation) getAt(TC_LIST_H)).all();
+    }
+
+    public final void addTCToTCList(long id) {
+        ((Relation) getAt(TC_LIST_H)).add(id);
     }
 
     /**
@@ -75,18 +72,33 @@ public class CategoryNode extends BaseNode {
         }
     }
 
-    /**
-     * return in a CallBack the node containing the Delimiter Vocabulary Node
-     *
-     * @param callback in which the node will be returned
-     */
-    public final void getDelimiterVocabularyNode(Callback<DelimiterVocabularyNode> callback) {
-        traverseAt(DELIMITER_VOCABULARY_RELATION_H, (Callback<Node[]>) result -> {
-            if (result.length > 0) {
-                callback.on((DelimiterVocabularyNode) result[0]);
-            } else throw new RuntimeException("Category Node was not initialized or is not a category Node");
-        });
 
+    /**
+     * Method to retrieve the delimiter corresponding to a given hash
+     *
+     * @param hash to look for
+     * @return the delimiter
+     */
+    public final String retrieveDelimiterCorrespondingTo(int hash) {
+        IntStringMap map = (IntStringMap) getAt(DELIMITER_MAP_H);
+        return map.get(hash);
+    }
+
+    /**
+     * Method to add a delimiter to the map
+     *
+     * @param hash      to add
+     * @param delimiter corresponding
+     * @return true if inserted false if already present
+     */
+    public boolean addDelimiter(int hash, String delimiter) {
+        IntStringMap map = (IntStringMap) getAt(DELIMITER_MAP_H);
+        if (!delimiter.equals(map.get(hash))) {
+            map.put(hash, delimiter);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -100,15 +112,8 @@ public class CategoryNode extends BaseNode {
         indexfather.update(this);
         indexfather.free();
 
-        TCListNode tcListNode = (TCListNode) _graph.newTypedNode(0, BEGINNING_OF_TIME, TCListNode.NAME);
-        tcListNode.initNode();
-        addToRelationAt(TC_LIST_RELATION_H, tcListNode);
-        tcListNode.free();
-
-        DelimiterVocabularyNode delimiterVocabularyNode = (DelimiterVocabularyNode) _graph.newTypedNode(0, BEGINNING_OF_TIME, DelimiterVocabularyNode.NAME);
-        delimiterVocabularyNode.initNode();
-        addToRelationAt(DELIMITER_VOCABULARY_RELATION_H, delimiterVocabularyNode);
-        delimiterVocabularyNode.free();
+        getOrCreateAt(TC_LIST_H, Type.RELATION);
+        getOrCreateAt(DELIMITER_MAP_H, Type.INT_TO_STRING_MAP);
 
         CategoryNode categoryNode = this;
 
@@ -126,8 +131,8 @@ public class CategoryNode extends BaseNode {
      * @param callback in which the node will be returned
      */
     public final static void getOrCreateCategoryNode(Graph graph, String category, Callback<CategoryNode> callback) {
-        graph.declareIndex(0, INDEX_CATEGORY,
-                index -> index.findFrom(
+        graph.index(0, BEGINNING_OF_TIME, INDEX_CATEGORY, index ->
+                index.findFrom(
                         result -> {
                             CategoryNode categoryNode;
                             if (result.length != 0) {
@@ -138,7 +143,7 @@ public class CategoryNode extends BaseNode {
                                 categoryNode = (CategoryNode) graph.newTypedNode(0, BEGINNING_OF_TIME, CategoryNode.NAME);
                                 categoryNode.initCategory(category, index, callback);
                             }
-                        },
-                        category), CATEGORY);
+                        }
+                        , category));
     }
 }

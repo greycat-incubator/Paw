@@ -6,7 +6,7 @@ import greycat.Type;
 import greycat.base.BaseNode;
 import greycat.struct.IntIntMap;
 import greycat.utility.HashHelper;
-import paw.graph.customTypes.bitset.CTBitset;
+import paw.graph.customTypes.radix.struct.RadixTree;
 import paw.graph.customTypes.radix.structii.RadixTreeWithII;
 
 /**
@@ -44,7 +44,7 @@ public class VocabularyNode extends BaseNode {
         setAt(FIRST_CHAR_H, Type.STRING, String.valueOf(firstChar));
         setTimeSensitivity(-1, 0);
         getOrCreateAt(MAPOFWORD_H, Type.INT_TO_INT_MAP);
-        getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
+        getOrCreateCustomAt(RADIX_H, RadixTree.NAME);
     }
 
     /**
@@ -71,19 +71,16 @@ public class VocabularyNode extends BaseNode {
      * Method to get the position of a word in the radix and create it if necessary, the tokenizecontent id requesting it will be stored in the radix tree.
      *
      * @param word to look for
-     * @param tcId tokenize content id
      * @return the position of the word in the radix tree.
      */
-    public final int getOrCreateWordForTC(String word, int tcId) {
+    public final int getOrCreateWord(String word) {
         int hash = HashHelper.hash(word);
         int result = getWord(hash);
-        RadixTreeWithII radixTreeWithII = (RadixTreeWithII) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
+        RadixTree radixTree = (RadixTree) getOrCreateCustomAt(RADIX_H, RadixTree.NAME);
         if (result == Constants.NULL_INT) {
-            result = radixTreeWithII.getOrCreateWithID(word, tcId);
+            result = radixTree.getOrCreate(word);
             IntIntMap map = (IntIntMap) getAt(MAPOFWORD_H);
             map.put(hash, result);
-        } else {
-            radixTreeWithII.addIDToNode(result, tcId);
         }
         return result;
     }
@@ -93,16 +90,7 @@ public class VocabularyNode extends BaseNode {
      * @return
      */
     public final String getWordForPosition(int position) {
-        RadixTreeWithII radixTreeWithII = (RadixTreeWithII) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
-        return radixTreeWithII.getNameOfToken(position);
-    }
-
-    /**
-     * @param position
-     * @return
-     */
-    public final CTBitset getIteratorForTCID(int position) {
-        RadixTreeWithII radixTreeWithII = (RadixTreeWithII) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
-        return radixTreeWithII.retrieveInvertedIndexFor(position);
+        RadixTree radixTree = (RadixTree) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
+        return radixTree.getNameOfToken(position);
     }
 }

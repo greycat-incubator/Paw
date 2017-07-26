@@ -18,7 +18,7 @@ package paw.graph.customTypes.radix.structii;
 import greycat.struct.EStruct;
 import greycat.struct.EStructArray;
 import paw.graph.customTypes.bitset.CTBitset;
-import paw.graph.customTypes.bitset.roaring.CTRoaringBitMap;
+import paw.graph.customTypes.bitset.fastbitset.CTFastBitSet;
 import paw.graph.customTypes.radix.struct.RadixTree;
 
 @SuppressWarnings("Duplicates")
@@ -38,13 +38,13 @@ public class RadixTreeWithII extends RadixTree {
 
     public void addIDToNode(int node, int docId) {
         EStruct enode = _backend.estruct(node);
-        CTRoaringBitMap bitMap = (CTRoaringBitMap) enode.getOrCreateCustom("ii", CTRoaringBitMap.NAME);
+        CTFastBitSet bitMap = (CTFastBitSet) enode.getOrCreateCustom("ii", CTFastBitSet.NAME);
         bitMap.add(docId);
         bitMap.save();
     }
 
     public CTBitset retrieveInvertedIndexFor(int node) {
         EStruct enode = _backend.estruct(node);
-        return (CTRoaringBitMap) enode.getOrCreateCustom("ii", CTRoaringBitMap.NAME);
+        return (CTFastBitSet) enode.getOrCreateCustom("ii", CTFastBitSet.NAME);
     }
 }

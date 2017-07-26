@@ -74,6 +74,8 @@ public class TokenizeContentNode extends BaseNode {
         Relation relation = (Relation) getOrCreateAt(CATEGORY_H, Type.RELATION);
         CategoryNode.getOrCreateCategoryNode(_graph, category, result -> {
             relation.add(result.id());
+            result.addTCToTCList(currentNode._id);
+            result.free();
             callback.on(currentNode);
         });
     }
@@ -106,8 +108,7 @@ public class TokenizeContentNode extends BaseNode {
 
         final CategoryNode[] categoryNodes = new CategoryNode[1];
         getCategoryNode(result -> categoryNodes[0] = result);
-        final DelimiterVocabularyNode[] delimiterVocabularyNodes = new DelimiterVocabularyNode[1];
-        categoryNodes[0].getDelimiterVocabularyNode(result -> delimiterVocabularyNodes[0] = result);
+
         LongLongArrayMap mapMasks = (LongLongArrayMap) getAt(INTERNAL_MASKS_H);
         List<Token> tokens = new ArrayList<>(words.size());
 
@@ -134,7 +135,7 @@ public class TokenizeContentNode extends BaseNode {
                     });
                     break;
                 case DELIMITER_TOKEN:
-                    token[0] = new DelimiterT(delimiterVocabularyNodes[0].retrieveDelimiterCorrespondingTo(word.getWordID()));
+                    token[0] = new DelimiterT(categoryNodes[0].retrieveDelimiterCorrespondingTo(word.getWordID()));
                     break;
                 case NUMBER_TOKEN:
                     token[0] = new NumberT(word.getWordID());
@@ -143,23 +144,16 @@ public class TokenizeContentNode extends BaseNode {
             tokens.add(token[0]);
         }
         categoryNodes[0].free();
-        categoryNodes[0].free();
+
         return tokens;
     }
 
     public final TokenizeContentNode setContent(List<Token> tokens) {
         this.rephase();
-        TokenizeContentNode tcn = this;
         CTTCRoaring roaring = (CTTCRoaring) getOrCreateCustomAt(INTERNAL_ENCODED_TEXT_H, CTTCRoaring.NAME);
         roaring.clear();
         final CategoryNode[] categoryNodes = new CategoryNode[1];
         getCategoryNode(result -> categoryNodes[0] = result);
-
-        int[] tcnID = new int[1];
-        categoryNodes[0].getTokenizeContentListNode(result -> tcnID[0] = result.addTokenizeContentID(tcn._id));
-
-        final DelimiterVocabularyNode[] delimiterVocabularyNodes = new DelimiterVocabularyNode[1];
-        categoryNodes[0].getDelimiterVocabularyNode(result -> delimiterVocabularyNodes[0] = result);
 
         removeAt(INTERNAL_MAP_OF_WORDS_H);
         removeAt(INTERNAL_MASKS_H);
@@ -187,14 +181,14 @@ public class TokenizeContentNode extends BaseNode {
                     } else {
                         VocabularyNode[] vocabularyNodes = new VocabularyNode[1];
                         categoryNodes[0].getVocabularyNodeFor(firstChar, result -> vocabularyNodes[0] = result);
-                        int position = vocabularyNodes[0].getOrCreateWordForTC(content, tcnID[0]);
+                        int position = vocabularyNodes[0].getOrCreateWord(content);
                         roaring.addWord(new Word(CONTENT_TOKEN, position, firstChar));
                         map.put(hash, position);
                         vocabularyNodes[0].free();
                     }
                     break;
                 case DELIMITER_TOKEN:
-                    delimiterVocabularyNodes[0].addDelimiter(hash, content);
+                    categoryNodes[0].addDelimiter(hash, content);
                     roaring.addWord(new Word(DELIMITER_TOKEN, hash));
                     break;
                 case NUMBER_TOKEN:
@@ -202,7 +196,6 @@ public class TokenizeContentNode extends BaseNode {
                     break;
             }
         }
-        delimiterVocabularyNodes[0].free();
         categoryNodes[0].free();
         roaring.save();
         return this;

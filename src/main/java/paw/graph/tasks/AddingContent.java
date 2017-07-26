@@ -11,15 +11,13 @@ import static greycat.Tasks.newTask;
 
 public class AddingContent {
 
-    public static Task addTokenizeContentToNode(List<Token> tokens,String category, String name){
+    public static Task addTokenizeContentToNode(List<Token> tokens, String category, String name) {
         return newTask()
-                .thenDo(ctx ->{
-                    if(ctx.result().size() !=1 || !(ctx.result().get(0) instanceof Node)){
-                        ctx.endTask(ctx.result(),new RuntimeException("wrong input to Task"));
-                    }
+                .thenDo(ctx -> {
                     Node currentNode = ctx.resultAsNodes().get(0);
                     TokenizeContentNode.getOrCreateTokenizeContentOfNode(currentNode, name, category, result -> {
                         result.setContent(tokens);
+                        result.free();
                         ctx.continueTask();
                     });
                 });

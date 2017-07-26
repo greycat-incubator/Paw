@@ -18,6 +18,7 @@ public class RadixTreeArray extends BaseCustomType {
     private int size;
     public static final String NAME = "RadixTreeArray" ;
 
+
     public RadixTreeArray(EStructArray backend) {
         super(backend);
         tree = backend.root();
