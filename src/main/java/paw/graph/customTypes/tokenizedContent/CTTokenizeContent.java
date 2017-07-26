@@ -27,7 +27,7 @@ public class CTTokenizeContent {
     private static int[] SIZE_CODING_FC = new int[]{7, 8, 16, 32};
     private static int[] SIZE_CODING_CONTENT = new int[]{8, 16, 24, 32};
 
-    private static int encodingSize(int toEncode, CTBitset bitset, int currentStop, int[] encodingArraySize) {
+    private static int encodingSize(int toEncode, List<Integer> bitset, int currentStop, int[] encodingArraySize) {
         int minimumBitSize = 32 - Integer.numberOfLeadingZeros(toEncode);
         int iterationMax;
         //00
@@ -53,7 +53,7 @@ public class CTTokenizeContent {
         return iterationMax;
     }
 
-    private static void encoding(int iterationMax, int toEncode, CTBitset bitset, int currentStop) {
+    private static void encoding(int iterationMax, int toEncode, List<Integer> bitset, int currentStop) {
         int stop = currentStop;
         for (int i = iterationMax - 1; i >= 0; i--) {
             if ((toEncode & 1 << i) != 0) {
@@ -70,50 +70,54 @@ public class CTTokenizeContent {
     private final static byte CONTENT_ENCODING = 4;
     private final static byte END_OF_ENCODING = 5;
 
-    public static int addWord(Word word, CTBitset bitset, int currentStop) {
-        byte state = TYPE_ENCODING;
+    public static int addWord(List<Word> words, CTBitset bitset, int currentStop) {
         int newStop = currentStop;
-        int iterationMax = 0;
-        while (state != END_OF_ENCODING) {
-            switch (state) {
-                case (TYPE_ENCODING):
-                    switch (word.type) {
-                        case PawConstants.NUMBER_TOKEN:
-                            bitset.add(newStop + 1);
-                        case PawConstants.DELIMITER_TOKEN:
-                            bitset.add(newStop);
-                            newStop += 2;
-                            state = CONTENT_SIZE_ENCODING;
-                            break;
-                        case PawConstants.CONTENT_TOKEN:
-                            newStop++;
-                            state = FIRST_CHAR_SIZE_ENCODING;
-                            break;
-                    }
-                    break;
-                case (FIRST_CHAR_SIZE_ENCODING):
-                    iterationMax = encodingSize(word.firstChar, bitset, newStop, SIZE_CODING_FC);
-                    newStop += 2;
-                    state = FIRST_CHAR_ENCODING;
-                    break;
-                case FIRST_CHAR_ENCODING:
-                    encoding(iterationMax, word.firstChar, bitset, newStop);
-                    newStop += iterationMax;
-                    state = CONTENT_SIZE_ENCODING;
-                    break;
+        List<Integer> toAdd = new ArrayList<>();
+        for (Word word : words) {
+            byte state = TYPE_ENCODING;
+            int iterationMax = 0;
+            while (state != END_OF_ENCODING) {
+                switch (state) {
+                    case (TYPE_ENCODING):
+                        switch (word.type) {
+                            case PawConstants.NUMBER_TOKEN:
+                                toAdd.add(newStop + 1);
+                            case PawConstants.DELIMITER_TOKEN:
+                                toAdd.add(newStop);
+                                newStop += 2;
+                                state = CONTENT_SIZE_ENCODING;
+                                break;
+                            case PawConstants.CONTENT_TOKEN:
+                                newStop++;
+                                state = FIRST_CHAR_SIZE_ENCODING;
+                                break;
+                        }
+                        break;
+                    case (FIRST_CHAR_SIZE_ENCODING):
+                        iterationMax = encodingSize(word.firstChar, toAdd, newStop, SIZE_CODING_FC);
+                        newStop += 2;
+                        state = FIRST_CHAR_ENCODING;
+                        break;
+                    case FIRST_CHAR_ENCODING:
+                        encoding(iterationMax, word.firstChar, toAdd, newStop);
+                        newStop += iterationMax;
+                        state = CONTENT_SIZE_ENCODING;
+                        break;
 
-                case (CONTENT_SIZE_ENCODING):
-                    iterationMax = encodingSize(word.wordID, bitset, newStop, SIZE_CODING_CONTENT);
-                    newStop += 2;
-                    state = CONTENT_ENCODING;
-                    break;
-                case (CONTENT_ENCODING):
-                    encoding(iterationMax, word.wordID, bitset, newStop);
-                    newStop += iterationMax;
-                    state = END_OF_ENCODING;
-                    break;
+                    case (CONTENT_SIZE_ENCODING):
+                        iterationMax = encodingSize(word.wordID, toAdd, newStop, SIZE_CODING_CONTENT);
+                        newStop += 2;
+                        state = CONTENT_ENCODING;
+                        break;
+                    case (CONTENT_ENCODING):
+                        encoding(iterationMax, word.wordID, toAdd, newStop);
+                        newStop += iterationMax;
+                        state = END_OF_ENCODING;
+                        break;
+                }
             }
         }
+        bitset.addAll(toAdd);
         return newStop;
     }
 

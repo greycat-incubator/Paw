@@ -177,6 +177,8 @@ public class TokenizeContentNode extends BaseNode {
 
         Map<Integer, Integer> map = new HashMap<>();
 
+        List<Word> words = new ArrayList<>();
+
         for (int i = 0; i < tokens.size(); i++) {
             Token token = tokens.get(i);
             String content = token.getToken();
@@ -192,25 +194,26 @@ public class TokenizeContentNode extends BaseNode {
                     }
                     char firstChar = content.charAt(0);
                     if (map.containsKey(hash)) {
-                        roaring.addWord(new Word(CONTENT_TOKEN, map.get(hash), firstChar));
+                        words.add(new Word(CONTENT_TOKEN, map.get(hash), firstChar));
                     } else {
                         VocabularyNode[] vocabularyNodes = new VocabularyNode[1];
                         categoryNodes[0].getVocabularyNodeFor(firstChar, result -> vocabularyNodes[0] = result);
                         int position = vocabularyNodes[0].getOrCreateWord(content);
-                        roaring.addWord(new Word(CONTENT_TOKEN, position, firstChar));
+                        words.add(new Word(CONTENT_TOKEN, position, firstChar));
                         map.put(hash, position);
                         vocabularyNodes[0].free();
                     }
                     break;
                 case DELIMITER_TOKEN:
                     categoryNodes[0].addDelimiter(hash, content);
-                    roaring.addWord(new Word(DELIMITER_TOKEN, hash));
+                    words.add(new Word(DELIMITER_TOKEN, hash));
                     break;
                 case NUMBER_TOKEN:
-                    roaring.addWord(new Word(NUMBER_TOKEN, ((NumberT) token).getInt()));
+                    words.add(new Word(NUMBER_TOKEN, ((NumberT) token).getInt()));
                     break;
             }
         }
+        roaring.addWords(words);
         categoryNodes[0].free();
         roaring.save();
         return this;

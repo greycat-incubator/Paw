@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.util.Base64;
+import java.util.List;
 
 public class CTRoaringBitMap extends CTBitset {
 
@@ -111,6 +112,12 @@ public class CTRoaringBitMap extends CTBitset {
     @Override
     public boolean add(int index) {
         return bitmap.checkedAdd(index);
+    }
+
+    @Override
+    public boolean addAll(List<Integer> indexs) {
+        bitmap.add(indexs.stream().mapToInt(i -> i).toArray());
+        return true;
     }
 
     @Override

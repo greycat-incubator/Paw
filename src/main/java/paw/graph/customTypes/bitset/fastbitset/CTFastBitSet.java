@@ -23,13 +23,15 @@ import greycat.struct.IntArray;
 import org.roaringbitmap.IntIterator;
 import paw.graph.customTypes.bitset.CTBitset;
 
+import java.util.List;
+
 public class CTFastBitSet extends CTBitset {
 
     private IntArray gBits;
     protected BitSet bitSet;
     protected EStruct root;
 
-    public static final String NAME = "FastBitSet" ;
+    public static final String NAME = "FastBitSet";
 
     public CTFastBitSet(EStructArray array) {
         super(array);
@@ -53,7 +55,17 @@ public class CTFastBitSet extends CTBitset {
     }
 
     @Override
-    public void clear(int index) {bitSet.clear(index);}
+    public boolean addAll(List<Integer> indexs) {
+        for (int index : indexs) {
+            bitSet.add(index);
+        }
+        return true;
+    }
+
+    @Override
+    public void clear(int index) {
+        bitSet.clear(index);
+    }
 
     @Override
     public int size() {
@@ -76,7 +88,9 @@ public class CTFastBitSet extends CTBitset {
     }
 
     @Override
-    public IntIterator iterator() { return bitSet.iterator();}
+    public IntIterator iterator() {
+        return bitSet.iterator();
+    }
 
     public void save() {
         gBits.initWith(bitSet.toIntArray());

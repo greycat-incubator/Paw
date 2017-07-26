@@ -63,7 +63,7 @@ public class CTTCRoaring extends CTRoaringBitMap implements InterfaceTokenizeCon
         return dirty;
     }
 
-    public void addWord(Word word) {
+    public void addWords(List<Word> word) {
         currentStop = CTTokenizeContent.addWord(word, this, currentStop);
         dirty = true;
     }

@@ -21,6 +21,8 @@ import greycat.struct.EStructArray;
 import greycat.utility.HashHelper;
 import org.roaringbitmap.IntIterator;
 
+import java.util.List;
+
 public abstract class CTBitset  extends BaseCustomType{
     public static final String BITS = "bits";
     protected static final int BITS_H = HashHelper.hash(BITS);
@@ -34,6 +36,8 @@ public abstract class CTBitset  extends BaseCustomType{
     public abstract void clear();
 
     public abstract boolean add(int index);
+
+    public abstract boolean addAll(List<Integer> indexs);
 
     public abstract void clear(int index);
 

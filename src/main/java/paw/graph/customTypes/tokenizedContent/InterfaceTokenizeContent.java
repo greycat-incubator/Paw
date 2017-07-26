@@ -24,7 +24,7 @@ public interface InterfaceTokenizeContent {
 
     void save() throws IOException;
 
-    void addWord(Word word);
+    void addWords(List<Word> word);
 
     List<Word> decodeWords();
 
