@@ -31,7 +31,7 @@
 grammar C;
 
 @header{
-package paw.tokeniser.tokenisation.pl.c
+package paw.old.tokeniser.tokenisation.pl.c
 }
 
 primaryExpression
