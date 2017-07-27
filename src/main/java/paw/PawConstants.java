@@ -38,53 +38,17 @@ public class PawConstants {
     /**
      * Index
      */
-    public final static String INDEX_CATEGORY = "category";
-
+    public final static String INDEX_DICTIONNARY = "dictionnary";
+    public final static String INDEX_DELIMITER = "delimiter";
 
 
 
     /**
      * Attribute Name
      */
+    public final static String CATEGORY_OF_TOKENIZE_CONTENT = "category";
     public final static String NODE_TYPE = "Ntype";
-    public final static String NODE_NAME = "Nname";
 
     public final static String RELATION_INDEX_ENTRY_POINT = "entryPoint";
-    //public final static String INVERTED_INDEX_NODE_LIST = "list";
-    public final static String DELIMITER_VOCABULARY = "delvocab";
 
-    public final static String TOKENIZED_CONTENT_SUB_ID = "subs";
-    public final static String TOKENIZED_CONTENT_HASH = "hash";
-    public final static String TOKENIZED_CONTENT_MASKS = "masks";
-    public final static String TOKENIZED_CONTENT_DELN = "del";
-    public final static String TOKENIZED_CONTENT_NUMBER = "numb";
-
-    public final static String TOKENIZED_CONTENT_LIST = "list";
-
-    public final static String SUB_INDEX_HASH_ID = "hash";
-
-    /**
-     * Node Types
-     */
-    public final static int VOCABULARY_NODE = 0;
-    public final static int TCLIST_NODE = 1;
-    public final static int INDEXING_NODE = 2;
-    public final static int DELIMITER_NODE = 3;
-    public final static int SUB_INDEXING_NODE = 4;
-    public final static int TOKENIZED_CONTENT = 5;
-
-    public final static int SUB_INDEX_RADIX = 6;
-    public final static int SUB_INDEX_MAP = 7;
-    public final static int SUB_INDEX_II =8;
-
-    /**
-     * Relation
-     */
-    public final static String RELATION_VOCAB_CACHE_INDEX_DEL = "cacheIndex";
-    public final static String RELATION_INDEXED_INDEX_TO_SUBINDEX = "subIndex";
-    public final static String RELATION_SUBINDEX_TO_DATA = "data";
-    public final static String RELATION_INDEXED_NODE_TO_TOKENIZECONTENT = "tokenizedContents";
-    public final static String RELATION_TOKENIZECONTENT_TO_NODE = "fatherNode";
-
-    public final static String RELATION_INDEXED_II_TO_SUBII  = "subii";
 }

@@ -22,7 +22,6 @@ import greycat.base.BaseNode;
 import greycat.struct.IntIntMap;
 import greycat.utility.HashHelper;
 import paw.graph.customTypes.radix.struct.RadixTree;
-import paw.graph.customTypes.radix.structii.RadixTreeWithII;
 
 /**
  * Class representing a vocabulary node, words are splitted between vocabulary nodes based on their first character
@@ -105,7 +104,7 @@ public class VocabularyNode extends BaseNode {
      * @return
      */
     public final String getWordForPosition(int position) {
-        RadixTree radixTree = (RadixTree) getOrCreateCustomAt(RADIX_H, RadixTreeWithII.NAME);
+        RadixTree radixTree = (RadixTree) getOrCreateCustomAt(RADIX_H, RadixTree.NAME);
         return radixTree.getNameOfToken(position);
     }
 }

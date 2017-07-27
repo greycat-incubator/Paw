@@ -92,8 +92,8 @@ public class CTRoaringBitMap extends CTBitset {
         }
         //
         outbb.flip();
-        String serializedstring = Base64.getEncoder().encodeToString(outbb.array());
-        root.setAt(BITS_H, Type.STRING, serializedstring);
+        root.setAt(BITS_H, Type.STRING, Base64.getEncoder().encodeToString(outbb.array()));
+
     }
 
     public RoaringBitmap getBitMap() {
@@ -151,4 +151,5 @@ public class CTRoaringBitMap extends CTBitset {
     public IntIterator iterator() {
         return bitmap.getIntIterator();
     }
+
 }

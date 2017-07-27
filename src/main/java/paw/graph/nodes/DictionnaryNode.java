@@ -17,20 +17,19 @@ package paw.graph.nodes;
 
 import greycat.*;
 import greycat.base.BaseNode;
-import greycat.struct.IntStringMap;
 import greycat.struct.Relation;
 import greycat.utility.HashHelper;
 
 import static greycat.Constants.BEGINNING_OF_TIME;
-import static paw.PawConstants.INDEX_CATEGORY;
+import static paw.PawConstants.INDEX_DICTIONNARY;
 import static paw.graph.nodes.TokenizeContentNode.CATEGORY;
 import static paw.graph.nodes.TokenizeContentNode.CATEGORY_H;
 
 /**
  * Category Node, extending the base node, this node is the main entrance point to a given category of tokenize content
  */
-public class CategoryNode extends BaseNode {
-    public final static String NAME = "CATEGORY";
+public class DictionnaryNode extends BaseNode {
+    public final static String NAME = "DICTIONNARY";
 
     public final static String VOCABULARY_RELATION = "vocabulary";
     private final static int VOCABULARY_RELATION_H = HashHelper.hash(VOCABULARY_RELATION);
@@ -38,8 +37,8 @@ public class CategoryNode extends BaseNode {
     public final static String TC_LIST = "List";
     private final static int TC_LIST_H = HashHelper.hash(TC_LIST);
 
-    public final static String DELIMITER_MAP = "delimiterMap";
-    private final static int DELIMITER_MAP_H = HashHelper.hash(DELIMITER_MAP);
+    public final static String NUMBER_OF_TC = "numberOfTc";
+    private final static int NUMBER_OF_TC_H = HashHelper.hash(NUMBER_OF_TC);
 
     /**
      * Constructor
@@ -49,7 +48,7 @@ public class CategoryNode extends BaseNode {
      * @param p_id    id of the node
      * @param p_graph graph
      */
-    public CategoryNode(long p_world, long p_time, long p_id, Graph p_graph) {
+    public DictionnaryNode(long p_world, long p_time, long p_id, Graph p_graph) {
         super(p_world, p_time, p_id, p_graph);
     }
 
@@ -60,12 +59,21 @@ public class CategoryNode extends BaseNode {
         return (String) getAt(CATEGORY_H);
     }
 
-    public final long[] getTokenizeContentList() {
-        return ((Relation) getAt(TC_LIST_H)).all();
-    }
 
     public final void addTCToTCList(long id) {
-        ((Relation) getAt(TC_LIST_H)).add(id);
+        int ntc = (int) getAt(NUMBER_OF_TC_H);
+        final TCListNode[] node = new TCListNode[1];
+        Relation relation = (Relation) getAt(TC_LIST_H);
+        if (ntc % 10000 == 0) {
+            node[0] = (TCListNode) graph().newTypedNode(0, BEGINNING_OF_TIME, TCListNode.NAME);
+            node[0].initNode();
+            relation.add(node[0].id());
+        } else {
+            long nodeId = relation.get(relation.size() - 1);
+            graph().lookup(0, BEGINNING_OF_TIME, nodeId, result -> node[0] = (TCListNode) result);
+        }
+        node[0].addTokenizeContentID(id);
+        node[0].free();
     }
 
     /**
@@ -89,48 +97,20 @@ public class CategoryNode extends BaseNode {
 
 
     /**
-     * Method to retrieve the delimiter corresponding to a given hash
-     *
-     * @param hash to look for
-     * @return the delimiter
-     */
-    public final String retrieveDelimiterCorrespondingTo(int hash) {
-        IntStringMap map = (IntStringMap) getAt(DELIMITER_MAP_H);
-        return map.get(hash);
-    }
-
-    /**
-     * Method to add a delimiter to the map
-     *
-     * @param hash      to add
-     * @param delimiter corresponding
-     * @return true if inserted false if already present
-     */
-    public boolean addDelimiter(int hash, String delimiter) {
-        IntStringMap map = (IntStringMap) getAt(DELIMITER_MAP_H);
-        if (!delimiter.equals(map.get(hash))) {
-            map.put(hash, delimiter);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
      * Function to initialize the category node
      *
      * @param category name of the category
      */
-    private void initCategory(String category, NodeIndex indexfather, Callback<CategoryNode> callback) {
+    private void initDictionnary(String category, NodeIndex indexfather, Callback<DictionnaryNode> callback) {
         set(CATEGORY, Type.STRING, category);
         this.setTimeSensitivity(-1, 0);
         indexfather.update(this);
         indexfather.free();
 
         getOrCreateAt(TC_LIST_H, Type.RELATION);
-        getOrCreateAt(DELIMITER_MAP_H, Type.INT_TO_STRING_MAP);
+        setAt(NUMBER_OF_TC_H, Type.INT, 0);
 
-        CategoryNode categoryNode = this;
+        DictionnaryNode categoryNode = this;
 
         Index index = (Index) getOrCreateAt(VOCABULARY_RELATION_H, Type.INDEX);
         index.declareAttributes(result -> {
@@ -145,18 +125,18 @@ public class CategoryNode extends BaseNode {
      * @param category name of the category
      * @param callback in which the node will be returned
      */
-    public final static void getOrCreateCategoryNode(Graph graph, String category, Callback<CategoryNode> callback) {
-        graph.index(0, BEGINNING_OF_TIME, INDEX_CATEGORY, index ->
+    public final static void getOrCreateDictionnaryNode(Graph graph, String category, Callback<DictionnaryNode> callback) {
+        graph.index(0, BEGINNING_OF_TIME, INDEX_DICTIONNARY, index ->
                 index.findFrom(
                         result -> {
-                            CategoryNode categoryNode;
+                            DictionnaryNode categoryNode;
                             if (result.length != 0) {
-                                categoryNode = (CategoryNode) result[0];
+                                categoryNode = (DictionnaryNode) result[0];
                                 index.free();
                                 callback.on(categoryNode);
                             } else {
-                                categoryNode = (CategoryNode) graph.newTypedNode(0, BEGINNING_OF_TIME, CategoryNode.NAME);
-                                categoryNode.initCategory(category, index, callback);
+                                categoryNode = (DictionnaryNode) graph.newTypedNode(0, BEGINNING_OF_TIME, DictionnaryNode.NAME);
+                                categoryNode.initDictionnary(category, index, callback);
                             }
                         }
                         , category));
